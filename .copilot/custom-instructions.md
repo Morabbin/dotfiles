@@ -12,9 +12,11 @@
 
 ## Commits
 
+* Group commits together logically.
 * Write concise commit messages in imperative mood (e.g., "Add validation for…").
 
 ## Pre-commit and pre-PR
 
+* Review changes, looking for simplifications, clarity improvements, performance improvements.
 * Run typechecking, formatting, and linting on the whole repo.
 * Run all tests unless expensive; then run only affected tests.
