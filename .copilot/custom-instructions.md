@@ -6,7 +6,7 @@
 
 ## Branches
 
-* Branch from latest origin/main; set upstream to origin/<branch>.
+* Branch from latest `origin/main`; set upstream to `origin/<branch>`.
 * For issues, name the branch like `morabbin/<short-description>`.
 * If there are uncommitted/unpushed changes on the current branch, ask whether to keep them here or move them to the new branch.
 
