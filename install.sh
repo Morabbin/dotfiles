@@ -23,7 +23,7 @@ if [ "$CODESPACES" = "true" ]; then
     ENV_FILE="/workspaces/copilot-agent-runtime/.env.local"
     if [[ -d "/workspaces/copilot-agent-runtime" ]]; then
       cat > "$ENV_FILE" <<ENV
-CAPI_PROD_KEY=${CAPI_GHAS_DEV_HMAC_KEY}
+CAPI_PROD_KEY=${CAPI_DEV_KEY}
 GITHUB_COPILOT_INTEGRATION_ID=${COPILOT_INTEGRATION_ID}
 ENV
       echo "✅ .env.local written for copilot-agent-runtime"
