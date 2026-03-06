@@ -16,6 +16,20 @@ if [ "$CODESPACES" = "true" ]; then
     ln -sf "$HOME/.copilot" "/workspaces/.copilot"
   fi
 
+  # Write .env.local, to permit running coding-agent-runtime evals tests
+  # Only if the Copilot secrets are available (they're injected as Codespace Secrets)
+  if [[ -n "$COPILOT_API_TOKEN" && -n "$COPILOT_INTEGRATION_ID" ]]; then
+    # Target the workspace root; codespaces clone repos to /workspaces/<repo-name>
+    ENV_FILE="/workspaces/coding-agent-runtime/.env.local"
+    if [[ -d "/workspaces/coding-agent-runtime" ]]; then
+      cat > "$ENV_FILE" <<EOF
+GITHUB_COPILOT_API_TOKEN=${COPILOT_API_TOKEN}
+GITHUB_COPILOT_INTEGRATION_ID=${COPILOT_INTEGRATION_ID}
+EOF
+      echo "✅ .env.local written for coding-agent-runtime"
+    fi
+  fi
+
   # One-time Copilot CLI login reminder
   echo "💡 Remember: run '/login' if Copilot CLI prompts for auth"
 fi
