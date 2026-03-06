@@ -17,8 +17,8 @@ if [ "$CODESPACES" = "true" ]; then
   fi
 
   # Write .env.local, to permit running copilot-agent-runtime evals tests
-  # Only if the Copilot secrets are available (they're injected as Codespace Secrets)
-  if [[ -n "$COPILOT_API_TOKEN" && -n "$COPILOT_INTEGRATION_ID" ]]; then
+  # Do so only if the relevants secrets have been injected as Codespace Secrets
+  if [[ -n "$CAPI_DEV_KEY" && -n "$COPILOT_INTEGRATION_ID" ]]; then
     # Target the workspace root; codespaces clone repos to /workspaces/<repo-name>
     ENV_FILE="/workspaces/copilot-agent-runtime/.env.local"
     if [[ -d "/workspaces/copilot-agent-runtime" ]]; then
