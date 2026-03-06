@@ -22,10 +22,10 @@ if [ "$CODESPACES" = "true" ]; then
     # Target the workspace root; codespaces clone repos to /workspaces/<repo-name>
     ENV_FILE="/workspaces/coding-agent-runtime/.env.local"
     if [[ -d "/workspaces/coding-agent-runtime" ]]; then
-      cat > "$ENV_FILE" <<EOF
+      cat > "$ENV_FILE" <<ENV
 GITHUB_COPILOT_API_TOKEN=${COPILOT_API_TOKEN}
 GITHUB_COPILOT_INTEGRATION_ID=${COPILOT_INTEGRATION_ID}
-EOF
+ENV
       echo "✅ .env.local written for coding-agent-runtime"
     fi
   fi
