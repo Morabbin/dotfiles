@@ -26,6 +26,7 @@ if [ "$CODESPACES" = "true" ]; then
 # CAPI_PROD_KEY=${CAPI_DEV_KEY}
 GITHUB_COPILOT_INTEGRATION_ID=${COPILOT_INTEGRATION_ID}
 GITHUB_COPILOT_API_TOKEN=${GH_TOKEN}
+GITHUB_MCP_ACCESS_TOKEN=
 ENV
       echo "✅ .env.local written for copilot-agent-runtime"
     fi
