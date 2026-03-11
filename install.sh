@@ -12,6 +12,7 @@ if [ "$CODESPACES" = "true" ]; then
   }
 
   # Symlink ~/.copilot into workspace for Copilot CLI path access
+  export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="/workspaces/.copilot"
   if [ -d "$HOME/.copilot" ] && [ ! -L "/workspaces/.copilot" ]; then
     ln -sf "$HOME/.copilot" "/workspaces/.copilot"
   fi
