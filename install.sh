@@ -35,6 +35,28 @@ ENV
     fi
   fi
 
+  # For github/github Gem update when the dotcom <-> sweagentd protobuf spec has been bumped
+  if [[ -d "/workspaces/github" ]]; then
+    
+    # Connect to VPN
+    vpn() {
+      echo "Connecting to VPN"
+      sudo tailscale up --hostname $CODESPACE_NAME --accept-routes --report-posture
+    }
+
+    # Download Gem, and generate code
+    gem-update() {
+      if [[ -n "$1" ]]; then
+        cd "/workspaces/github" && \
+          bin/bundle config set https://octofactory.githubapp.com/artifactory/api/gems/monolith-twirp-gems-releases-local "$GH_USERNAME:$OCTOFACTORY_TOKEN" && \
+          script/vendor-monolith-twirp-gem sweagentd sweagentd "$1" && \
+          bin/rails db:migrate db:test:soft_reset; bin/tapioca dsl
+      else
+        echo "gem-update: supply sweagentd proto version number"
+      fi
+    }
+  fi
+  
   # One-time Copilot CLI login reminder
   echo "💡 Remember: run '/login' if Copilot CLI prompts for auth"
 fi
