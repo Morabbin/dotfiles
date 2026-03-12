@@ -1,25 +1,25 @@
+
 # Copilot Instructions
 
 ## Safety
 
-* Never push to origin/main without explicit confirmation.
+* Never push to `origin/main` without explicit confirmation.
 
 ## Branches
 
-* **Always make a new branch before making any changes, if starting on the "default" branch for the repo (usually `main` or `master`)**
-  * Branch from latest `origin/<default-branch>` and **always** set the default upstream to `origin/<branch>`.
-  * For issues, name the branch `morabbin/<short-description>`.
-* If there are uncommitted/unpushed changes on the current branch, ask whether to keep them here or move them to the new branch.
+* **Always create a new branch before making changes when on the default branch (`main` or `master`).**
+  * Branch from `origin/<default-branch>` and set upstream to `origin/<branch>`.
+  * Name branches `morabbin/<short-description>` for issues.
+* If there are uncommitted/unpushed changes, ask whether to keep them on the current branch or move them to the new one.
 
 ## Commits
 
-* Group commits together logically.
-* Write concise commit messages in imperative mood (e.g., "Add validation for…").
+* Group commits logically.
+* Write commit messages in imperative mood (e.g., "Add validation for…").
 
-## Pre-commit and pre-PR
+## Pre-commit and Pre-PR
 
-* Review changes, looking for simplifications, clarity improvements, performance improvements, deviation from best practices, deviation from repo conventions.
-* Run typechecking, formatting, and linting on the whole repo.
-* Run all tests unless expensive; then run only affected tests.
-* If evals tests have been added or changed, run the affected evals tests with EVAL_TAGS=nightly.
-
+* Review changes for simplifications, clarity, performance, and adherence to best practices and repo conventions.
+* Run typechecking, formatting, and linting across the whole repo.
+* Run all tests; if expensive, run only affected tests.
+* If eval tests were added or changed, run affected evals with `EVAL_TAGS=nightly`.
