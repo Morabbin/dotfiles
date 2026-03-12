@@ -11,12 +11,6 @@ if [ "$CODESPACES" = "true" ]; then
     GITHUB_TOKEN= command gh "$@"
   }
 
-  # Symlink ~/.copilot into workspace for Copilot CLI path access
-  export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="/workspaces/.copilot"
-  if [ -d "$HOME/.copilot" ] && [ ! -L "/workspaces/.copilot" ]; then
-    ln -sf "$HOME/.copilot" "/workspaces/.copilot"
-  fi
-
   # Write .env.local, to permit running copilot-agent-runtime evals tests
   # Do so only if the relevants secrets have been injected as Codespace Secrets
   if [[ -n "$EVALS_CAPI_HMAC_KEY" && -n "$EVALS_CAPI_DEV_KEY" && -n "$COPILOT_INTEGRATION_ID" ]]; then
