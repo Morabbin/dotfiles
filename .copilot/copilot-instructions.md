@@ -1,4 +1,4 @@
-# Custom Instructions
+# Copilot Instructions
 
 ## Safety
 
