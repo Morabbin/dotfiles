@@ -30,19 +30,29 @@ ENV
     
     # Connect to VPN
     vpn() {
-      echo "Connecting to VPN"
-      sudo tailscale up --hostname $CODESPACE_NAME --accept-routes --report-posture
+      echo "Connecting to VPN..."
+      if sudo tailscale up --hostname "$CODESPACE_NAME" --accept-routes --report-posture; then
+        echo "✅ VPN connected"
+      else
+        echo "❌ VPN connection failed" >&2
+        return 1
+      fi
     }
 
     # Download Gem, and generate code
     gem-update() {
       if [[ -n "$1" ]]; then
-        cd "/workspaces/github" && \
-          bin/bundle config set https://octofactory.githubapp.com/artifactory/api/gems/monolith-twirp-gems-releases-local "$GH_USERNAME:$OCTOFACTORY_TOKEN" && \
-          script/vendor-monolith-twirp-gem sweagentd sweagentd "$1" && \
-          bin/rails db:migrate db:test:soft_reset; bin/tapioca dsl
+        (
+          cd "/workspaces/github" && \
+            bin/bundle config set https://octofactory.githubapp.com/artifactory/api/gems/monolith-twirp-gems-releases-local "$GH_USERNAME:$OCTOFACTORY_TOKEN" && \
+            script/vendor-monolith-twirp-gem sweagentd sweagentd "$1" && \
+            bin/rails db:migrate db:test:soft_reset && \
+            bin/tapioca dsl && \
+            echo "✅ gem-update complete"
+        )
       else
-        echo "gem-update: supply sweagentd proto version number"
+        echo "gem-update: supply sweagentd proto version number" >&2
+        return 1
       fi
     }
   fi
