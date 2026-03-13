@@ -14,7 +14,7 @@
 
 * **Always create a new branch before making changes when on the default branch (`main` or `master`).**
   * Branch from `origin/<default-branch>` and set upstream to `origin/<branch>`.
-  * Name branches `morabbin/<short-description>` for issues.
+  * Name branches `morabbin/<short-description>` when issue link is provided; otherwise, ask for a short description of the work or an issue link.
 * If there are uncommitted/unpushed changes, ask whether to keep them on the current branch or move them to the new one.
 
 ## Commits
