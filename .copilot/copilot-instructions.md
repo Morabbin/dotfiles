@@ -1,9 +1,14 @@
-
 # Copilot Instructions
 
 ## Safety
 
 * Never push to `origin/main` without explicit confirmation.
+
+## Starting Work
+
+* Before beginning any work, ensure the local repository is up to date with the remote:
+  * Run `git fetch origin` to update remote-tracking branches.
+  * Pull the latest changes for the current branch (`git pull --rebase` or equivalent).
 
 ## Branches
 
@@ -23,3 +28,4 @@
 * Run typechecking, formatting, and linting across the whole repo.
 * Run all tests; if expensive, run only affected tests.
 * If eval tests were added or changed, run affected evals with `EVAL_TAGS=nightly`.
+* Rebase the local branch on top of `origin/main` before pushing (`git fetch origin && git rebase origin/main`).
