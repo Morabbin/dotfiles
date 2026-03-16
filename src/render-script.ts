@@ -1,4 +1,5 @@
 import * as fs from "node:fs";
+import * as path from "node:path";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
@@ -25,7 +26,7 @@ async function main(): Promise<void> {
     }
 
     const content = fs.readFileSync(trimmed, "utf-8");
-    const fileName = trimmed.split("/").pop() ?? trimmed;
+    const fileName = path.basename(trimmed);
 
     const markdown = renderShellScriptAsMarkdown(fileName, content);
     console.log(markdown);
