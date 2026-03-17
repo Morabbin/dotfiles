@@ -48,15 +48,20 @@ async function main(): Promise<void> {
     }
 
     console.log(`\nSupported languages: ${SUPPORTED_LANGUAGES.join(", ")}`);
-    const langAnswer = await rl.question(
-      "Enter the language for syntax highlighting (default: bash): ",
-    );
-    const language = langAnswer.trim().toLowerCase() || "bash";
-
-    if (!SUPPORTED_LANGUAGES.includes(language)) {
-      console.error(
-        `Warning: "${language}" is not in the supported list. Using it anyway.`,
+    let language = "";
+    while (!language) {
+      const langAnswer = await rl.question(
+        "Enter the language for syntax highlighting (default: bash): ",
       );
+      const candidate = langAnswer.trim().toLowerCase() || "bash";
+
+      if (SUPPORTED_LANGUAGES.includes(candidate)) {
+        language = candidate;
+      } else {
+        console.error(
+          `Error: "${candidate}" is not a supported language. Please choose from the list above.`,
+        );
+      }
     }
 
     const content = fs.readFileSync(trimmed, "utf-8");
