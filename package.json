@@ -2,7 +2,7 @@
   "name": "dotfiles",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/render-script.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/render-script.js",

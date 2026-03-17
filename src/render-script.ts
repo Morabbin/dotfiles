@@ -53,4 +53,7 @@ function renderShellScriptAsMarkdown(
   return lines.join("\n");
 }
 
-main();
+main().catch((err: unknown) => {
+  console.error("Unexpected error:", err);
+  process.exitCode = 1;
+});
