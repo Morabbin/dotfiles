@@ -29,3 +29,22 @@
 * Run all tests; if expensive, run only affected tests.
 * If eval tests were added or changed, run affected evals with `EVAL_TAGS=nightly`.
 * Rebase the local branch on top of `origin/main` before pushing (`git fetch origin && git rebase origin/main`).
+
+## Creating a PR
+
+1. Check for contribution guidelines (e.g., `CONTRIBUTING.md`, `.github/CONTRIBUTING.md`) and follow them.
+2. Check for a PR template (e.g., `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/`) and use it to structure the PR description.
+3. Run all pre-commit checks before pushing.
+4. Create the PR with a clear title and a description that follows the template (if one exists).
+
+## Addressing PR Code Review
+
+When asked to work on a PR:
+
+1. Check out the PR branch locally and pull the latest changes.
+2. Read all pending code review comments on the PR.
+3. Address each comment by making the appropriate code changes.
+4. Run all pre-commit checks (typechecking, formatting, linting, tests) before committing.
+5. Commit and push the fixes.
+6. Update the PR description if the changes warrant it.
+7. Reply to each code review comment on my behalf, summarizing what was done and noting that you are replying on my behalf. Resolve the comments after replying.
