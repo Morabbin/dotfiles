@@ -20,7 +20,7 @@
 ## Commits
 
 * Group commits logically.
-* Write commit messages in imperative mood (e.g., "Add validation for…").
+* Write commit messages in imperative mood (e.g., "Add validation ").for
 
 ## Pre-commit and Pre-PR
 
@@ -37,6 +37,23 @@
 3. Run all pre-commit checks before pushing.
 4. Create the PR with a clear title and a description that follows the template (if one exists).
 
+## Dummy / Staging PRs
+
+When creating a "DO NOT MERGE" PR (e.g., for staging deployment testing):
+
+* **Description format:** Start with  DO NOT MERGE` heading, then explain the purpose and link to the source PR. End with a note to close without merging. Example:a `## * **Title format:** Use the 
+
+  ```markdown
+ DO NOT MERGE  ## 
+
+  This is a **dummy PR for staging deployment only**. It points the runtime
+  submodule at [`branch-name`](link-to-source-pr) to test <what> in staging.
+
+  **Purpose:** Deploy [repo#number](link) to staging for validation.
+
+  This PR should be **closed without merging** once staging testing is complete.
+  ```
+
 ## Addressing PR Code Review
 
 When asked to work on a PR:
@@ -48,3 +65,8 @@ When asked to work on a PR:
 5. Commit and push the fixes.
 6. Update the PR description if the changes warrant it.
 7. Reply to each code review comment on my behalf, summarizing what was done and noting that you are replying on my behalf. Resolve the comments after replying.
+
+## Shell and Markdown Pitfalls
+
+* **`gh api` with JSON bodies:** For PR descriptions containing special characters, write a JSON file with proper `\uXXXX` escapes and pass it via `--input file.json` rather than using `-f body=...` which is fragile with multi-line markdown.* **Emojis, em-dashes, and backticks in shell commands:** When passing markdown content containing Unicode characters (emojis  like 
+* Always verify the rendered output after updating PR descriptions that contain emojis or special formatting.
