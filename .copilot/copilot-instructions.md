@@ -20,7 +20,7 @@
 ## Commits
 
 * Group commits logically.
-* Write commit messages in imperative mood (e.g., "Add validation ").for
+* Write commit messages in imperative mood (e.g., "Add validation").
 
 ## Pre-commit and Pre-PR
 
@@ -41,10 +41,11 @@
 
 When creating a "DO NOT MERGE" PR (e.g., for staging deployment testing):
 
-* **Description format:** Start with  DO NOT MERGE` heading, then explain the purpose and link to the source PR. End with a note to close without merging. Example:a `## * **Title format:** Use the 
+* **Title format:** Use `🚫 DO NOT MERGE — <short purpose>`.
+* **Description format:** Start with a `## ⚠️ DO NOT MERGE` heading, then explain the purpose and link to the source PR. End with a note to close without merging. Example:
 
   ```markdown
- DO NOT MERGE  ## 
+  ## ⚠️ DO NOT MERGE
 
   This is a **dummy PR for staging deployment only**. It points the runtime
   submodule at [`branch-name`](link-to-source-pr) to test <what> in staging.
@@ -68,5 +69,6 @@ When asked to work on a PR:
 
 ## Shell and Markdown Pitfalls
 
-* **`gh api` with JSON bodies:** For PR descriptions containing special characters, write a JSON file with proper `\uXXXX` escapes and pass it via `--input file.json` rather than using `-f body=...` which is fragile with multi-line markdown.* **Emojis, em-dashes, and backticks in shell commands:** When passing markdown content containing Unicode characters (emojis  like 
-* Always verify the rendered output after updating PR descriptions that contain emojis or special formatting.
+* **`gh api` with JSON bodies:** For markdown content containing special characters, write a JSON file with proper `\uXXXX` escapes and pass it via `--input file.json` rather than using `-f body=...`, which is fragile with multi-line markdown.
+* **Emojis, em-dashes, and backticks in shell commands:** When passing markdown content containing Unicode characters (emojis, em-dashes, etc.) through shell arguments, use a file or heredoc instead of inline strings to avoid quoting and encoding issues.
+* **Always render and verify** the output after writing or updating any markdown document — especially content with emojis, special characters, or complex formatting. Fix any rendering issues before considering the task done.
