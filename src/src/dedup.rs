@@ -24,7 +24,30 @@ pub struct DuplicateGroup {
     pub files: Vec<FileInfo>,
 }
 
-// ── helpers ──────────────────────────────────────────────────────────
+/// Group the analysed files into duplicate groups.
+pub fn find_duplicates(
+    infos: Vec<FileInfo>,
+    mode: DuplicateMode,
+    min_group_size: usize,
+) -> Vec<DuplicateGroup> {
+    let mut groups: HashMap<String, Vec<FileInfo>> = HashMap::new();
+
+    for info in infos {
+        if let Some(key) = grouping_key(&info, mode) {
+            groups.entry(key).or_default().push(info);
+        }
+    }
+
+    let mut result: Vec<DuplicateGroup> = groups
+        .into_iter()
+        .filter(|(_, files)| files.len() >= min_group_size)
+        .map(|(key, files)| DuplicateGroup { key, files })
+        .collect();
+
+    // Deterministic output order.
+    result.sort_by(|a, b| a.key.cmp(&b.key));
+    result
+}
 
 /// Derive the grouping key for a file depending on the chosen mode.
 fn grouping_key(info: &FileInfo, mode: DuplicateMode) -> Option<String> {
@@ -59,8 +82,6 @@ fn grouping_key(info: &FileInfo, mode: DuplicateMode) -> Option<String> {
         }
     }
 }
-
-// ── public API ───────────────────────────────────────────────────────
 
 /// Build [`FileInfo`] records for every path, collecting only the data
 /// required by `mode`.
@@ -125,29 +146,4 @@ pub fn analyse(paths: &[PathBuf], mode: DuplicateMode) -> Vec<FileInfo> {
             }
         })
         .collect()
-}
-
-/// Group the analysed files into duplicate groups.
-pub fn find_duplicates(
-    infos: Vec<FileInfo>,
-    mode: DuplicateMode,
-    min_group_size: usize,
-) -> Vec<DuplicateGroup> {
-    let mut groups: HashMap<String, Vec<FileInfo>> = HashMap::new();
-
-    for info in infos {
-        if let Some(key) = grouping_key(&info, mode) {
-            groups.entry(key).or_default().push(info);
-        }
-    }
-
-    let mut result: Vec<DuplicateGroup> = groups
-        .into_iter()
-        .filter(|(_, files)| files.len() >= min_group_size)
-        .map(|(key, files)| DuplicateGroup { key, files })
-        .collect();
-
-    // Deterministic output order.
-    result.sort_by(|a, b| a.key.cmp(&b.key));
-    result
 }

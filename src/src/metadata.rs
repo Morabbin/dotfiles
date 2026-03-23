@@ -13,6 +13,12 @@ pub struct AudioMetadata {
     pub genre: Option<String>,
 }
 
+/// Lowercase and trim whitespace so that minor formatting differences don't
+/// prevent two files from being considered duplicates.
+fn normalize(s: &str) -> String {
+    s.trim().to_lowercase()
+}
+
 /// Try to read metadata from the file at `path`.
 ///
 /// Returns `None` when the file cannot be parsed or contains no tags at all.
@@ -27,10 +33,4 @@ pub fn read_metadata(path: &Path) -> Option<AudioMetadata> {
         track_number: tag.track(),
         genre: tag.genre().map(|s| normalize(s.as_ref())),
     })
-}
-
-/// Lowercase and trim whitespace so that minor formatting differences don't
-/// prevent two files from being considered duplicates.
-fn normalize(s: &str) -> String {
-    s.trim().to_lowercase()
 }

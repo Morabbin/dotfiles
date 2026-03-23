@@ -1,6 +1,12 @@
 use crate::dedup::DuplicateGroup;
 use std::io::{self, Write};
 
+/// Print duplicate groups as JSON.
+pub fn print_json(groups: &[DuplicateGroup], out: impl Write) -> io::Result<()> {
+    serde_json::to_writer_pretty(out, groups)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
+}
+
 /// Print duplicate groups as human-readable text.
 pub fn print_text(groups: &[DuplicateGroup], mut out: impl Write) -> io::Result<()> {
     if groups.is_empty() {
@@ -43,10 +49,4 @@ pub fn print_text(groups: &[DuplicateGroup], mut out: impl Write) -> io::Result<
     }
 
     Ok(())
-}
-
-/// Print duplicate groups as JSON.
-pub fn print_json(groups: &[DuplicateGroup], out: impl Write) -> io::Result<()> {
-    serde_json::to_writer_pretty(out, groups)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
 }
