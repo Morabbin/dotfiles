@@ -36,6 +36,11 @@
 2. Check for a PR template (e.g., `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/`) and use it to structure the PR description.
 3. Run all pre-commit checks before pushing.
 4. Create the PR with a clear title and a description that follows the template (if one exists).
+5. Always assign me (`Morabbin`) to the PR.
+
+## Creating Issues
+
+* Always assign me (`Morabbin`) to any issue created.
 
 ## Dummy / Staging PRs
 
@@ -71,4 +76,5 @@ When asked to work on a PR:
 
 * **`gh api` with JSON bodies:** For markdown content containing special characters, write a JSON file with proper `\uXXXX` escapes and pass it via `--input file.json` rather than using `-f body=...`, which is fragile with multi-line markdown.
 * **Emojis, em-dashes, and backticks in shell commands:** When passing markdown content containing Unicode characters (emojis, em-dashes, etc.) through shell arguments, use a file or heredoc instead of inline strings to avoid quoting and encoding issues.
-* **Always render and verify** the output after writing or updating any markdown document — especially content with emojis, special characters, or complex formatting. Fix any rendering issues before considering the task done.
+* **Avoid em-dash characters (`—`) in markdown.** Use `--` instead. Em-dashes can cause encoding and rendering issues across tools and terminals.
+* **Always render and verify** the output after writing or updating any markdown document -- especially content with emojis, special characters, or complex formatting. Fix any rendering issues before considering the task done.
