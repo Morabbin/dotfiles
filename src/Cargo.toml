@@ -1,0 +1,14 @@
+[package]
+name = "itunes-dedup"
+version = "0.1.0"
+edition = "2021"
+description = "CLI tool to find duplicate music files in iTunes library folders"
+
+[dependencies]
+clap = { version = "4.6.0", features = ["derive"] }
+sha2 = "0.10.8"
+walkdir = "2.5.0"
+lofty = "0.23.3"
+rayon = "1.11.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.140"
