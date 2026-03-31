@@ -1,3 +1,5 @@
+//! Command-line argument definitions for `itunes-dedup`.
+
 use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
 

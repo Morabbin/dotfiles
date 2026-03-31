@@ -1,3 +1,5 @@
+//! Audio metadata extraction and normalization using the `lofty` crate.
+
 use lofty::file::TaggedFileExt;
 use lofty::tag::Accessor;
 use serde::Serialize;

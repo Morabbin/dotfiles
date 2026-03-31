@@ -1,3 +1,8 @@
+//! Entry point for the `itunes-dedup` CLI tool.
+//!
+//! Parses command-line arguments, orchestrates the scan → analyse → group →
+//! report pipeline, and writes the results to stdout.
+
 mod cli;
 mod dedup;
 mod hasher;

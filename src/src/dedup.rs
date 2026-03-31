@@ -1,3 +1,5 @@
+//! Core duplicate-detection logic: analysis, grouping, and key derivation.
+
 use crate::cli::DuplicateMode;
 use crate::hasher::sha256_of_file;
 use crate::metadata::{read_metadata, AudioMetadata};

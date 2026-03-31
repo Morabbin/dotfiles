@@ -1,3 +1,5 @@
+//! Output formatters for duplicate-group results (JSON and plain text).
+
 use crate::dedup::DuplicateGroup;
 use std::io::{self, Write};
 

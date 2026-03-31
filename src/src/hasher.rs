@@ -1,3 +1,5 @@
+//! Streaming SHA-256 file hashing.
+
 use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{self, BufReader, Read};

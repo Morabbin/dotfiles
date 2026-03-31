@@ -1,3 +1,5 @@
+//! Recursive directory scanner that discovers audio files by extension.
+
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
