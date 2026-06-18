@@ -1,0 +1,33 @@
+name: Notify internal of public update
+
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: notify-internal
+  cancel-in-progress: true
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger internal submodule bump
+        env:
+          TOKEN: ${{ secrets.INTERNAL_DISPATCH_TOKEN }}
+          INTERNAL_REPO: ${{ secrets.INTERNAL_DISPATCH_REPO }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TOKEN:-}" ] || [ -z "${INTERNAL_REPO:-}" ]; then
+            echo "Dispatch secrets not configured; skipping." >&2
+            echo "Set INTERNAL_DISPATCH_TOKEN and INTERNAL_DISPATCH_REPO to enable." >&2
+            exit 0
+          fi
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${INTERNAL_REPO}/dispatches" \
+            -d '{"event_type":"public-updated"}'
