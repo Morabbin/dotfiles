@@ -26,7 +26,9 @@ These are always-on global rules. Task-specific procedures live in skills (`.cop
 
 ## Cost & Context Hygiene
 * Checkpoint long efforts. Confirm risky operations.
-* Prefer `view`/`grep`/`glob` over shell commands.
-* Delegate broad research to `explore` sub-agents.
+* Read and search files with `view`/`grep`/`glob`. Never shell out to `cat`/`head`/`tail`/`find`/`grep`/`ls` for reads -- they waste tokens and turns.
+* Delegate broad research and multi-file investigations to `explore` sub-agents; don't grind through inline bash search loops.
+* On long, multi-day sessions, compact context around ~150K tokens. Don't run pinned at the context ceiling.
+* Match the model to the task: a small/cheap model for mechanical work, a heavy model for design and architecture.
 * Never block the main session waiting (e.g. CI/sleeps). Delegate waits to background processes.
 * Summarize status per milestone.
