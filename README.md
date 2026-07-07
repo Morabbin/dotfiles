@@ -19,6 +19,15 @@ This is idempotent -- it overwrites the matching files under `~/.copilot/`.
 
 Set this repository as your [dotfiles repository for Codespaces](https://docs.github.com/en/codespaces/setting-your-user-preferences/personalizing-github-codespaces-for-your-account#dotfiles). Codespaces runs `install.sh` automatically when a codespace is created, so your Copilot CLI instructions and skills are available in every codespace.
 
+### Optional private overlay
+
+Codespaces auto-installs dotfiles using the codespace's built-in token, which is scoped to the workspace repo and can't read a personal private repo -- so a private dotfiles repo fails to auto-clone, but this public one clones fine. To layer a private overlay on top of this public base, set two Codespace Secrets and `install.sh` will clone the overlay (with a token that can read it) and run its installer after the public install:
+
+- `DOTFILES_TOKEN` -- a fine-grained PAT with **Contents: read** on the overlay repo.
+- `DOTFILES_REPO` -- the overlay repo as `owner/name`.
+
+With either secret unset, this step is skipped and the public install is all that runs.
+
 ## Skills
 
 | Skill | Purpose |
