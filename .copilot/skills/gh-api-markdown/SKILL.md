@@ -1,6 +1,6 @@
 ---
 name: gh-api-markdown
-description: Use when creating, posting, or editing GitHub PR/issue descriptions or comments that contain substantial markdown -- emojis, em-dashes, backticks, tables, links, or multiline/shell-sensitive content -- especially via `gh`, `gh pr/issue`, or `gh api`. Triggers whenever a body must survive shell quoting or a `gh api` call needs a JSON body.
+description: Use when creating, posting, or editing GitHub PR/issue descriptions or comments that contain substantial markdown (emojis, em-dashes, backticks, tables, links, or multiline/shell-sensitive content), especially via `gh`, `gh pr/issue`, or `gh api`. Triggers whenever a body must survive shell quoting or a `gh api` call needs a JSON body.
 ---
 
 # Posting markdown via gh / gh api

@@ -15,6 +15,6 @@ Use when creating a new pull request.
 
 ## Staging / Dummy PRs
 If the user asks for a "DO NOT MERGE", dummy, throwaway, or staging-validation PR:
-* **Title:** `🚫 DO NOT MERGE -- <short purpose>`
+* **Title:** `🚫 DO NOT MERGE: <short purpose>`
 * **Description:** Start with `## ⚠️ DO NOT MERGE`, explain the purpose, link the source PR, and note it should be closed without merging.
 * Always use a file or heredoc to pass these emojis to the `gh` CLI.
