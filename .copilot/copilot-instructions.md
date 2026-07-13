@@ -21,12 +21,12 @@ These are always-on global rules. Task-specific procedures live in skills (`.cop
 
 ## Shell & Markdown
 * Pass markdown with non-ASCII/backticks to `gh` via file/heredoc to avoid escaping errors.
-* Use `--` instead of em-dashes (`—`).
+* Don't use dashes (em-dash, en-dash, `--`, or hyphen) as connective or disjunctive punctuation; use commas, colons, semicolons, parentheses, or separate sentences. Hyphens are fine in compound words and numeric ranges.
 * Always format PR and issue references as clickable links when reporting status.
 
 ## Cost & Context Hygiene
 * Checkpoint long efforts. Confirm risky operations.
-* Read and search files with `view`/`grep`/`glob`. Never shell out to `cat`/`head`/`tail`/`find`/`grep`/`ls` for reads -- they waste tokens and turns.
+* Read and search files with `view`/`grep`/`glob`. Never shell out to `cat`/`head`/`tail`/`find`/`grep`/`ls` for reads; they waste tokens and turns.
 * Delegate broad research and multi-file investigations to `explore` sub-agents; don't grind through inline bash search loops.
 * On long, multi-day sessions, compact context around ~150K tokens. Don't run pinned at the context ceiling.
 * Match the model to the task: a small/cheap model for mechanical work, a heavy model for design and architecture.
