@@ -16,6 +16,7 @@ For each PR being managed:
 5. Invoke the `validate-changes` skill and fix any issues.
 6. Push (`git push`).
 7. Ensure the PR title and description are accurate, current-state-only, with no historical narration.
+8. When reporting PR status, always render or update a PR status table in the inbox widget via `render_widget`; do not rely on inline markdown alone for the table.
 
 When reporting status, mention only current open PRs unless asked about closed or superseded ones.
 
@@ -25,5 +26,6 @@ When asked to manage an epic or coordinate multiple related PRs/issues:
 2. Refresh/sync each PR iteratively using the single-PR steps above.
 3. If missing PRs need bootstrapping, invoke the `create-pr` skill.
 4. If review feedback is in scope, invoke the `address-pr-review` skill.
-5. Update PR/issue bodies in a batched pass.
-6. Publish one consolidated status report covering PR state, linkage state, and blockers.
+5. When batch-updating PR/issue bodies or posting markdown comments, follow the `gh-api-markdown` skill.
+6. Update PR/issue bodies in a batched pass.
+7. Publish one consolidated status report covering PR state, linkage state, and blockers.

@@ -14,5 +14,6 @@ Use when asked to act on a PR's review feedback.
    * Ask me before addressing comments that request scope expansion, architectural changes, or product decisions.
 4. Make the appropriate code changes for each in-scope comment. Commit these as new, distinct commits (do not amend or rebase) so reviewers can easily track your fixes.
 5. Reply to each addressed comment on my behalf, summarizing what was done and noting that you are replying on my behalf.
-6. Resolve a comment only when it is clearly fully addressed and resolving is appropriate. Leave reviewer-owned or open product/architecture threads unresolved, and report why.
-7. Invoke the `validate-changes` skill before pushing.
+6. When posting review replies or PR comments via `gh` / `gh api`, follow the `gh-api-markdown` skill if the body contains substantial markdown, backticks, links, tables, or other multiline / shell-sensitive content.
+7. Resolve a comment only when it is clearly fully addressed and resolving is appropriate. Leave reviewer-owned or open product/architecture threads unresolved, and report why.
+8. Invoke the `validate-changes` skill before pushing.
