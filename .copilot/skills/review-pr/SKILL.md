@@ -24,17 +24,25 @@ The full protocol below is expensive: a dozen model calls and several rounds. Do
 
 When it falls between the two, say so and ask which the user wants rather than silently spending the tokens. If a quick pass turns up something that smells structural, stop and offer to escalate.
 
+Size the change against the merge-base, not against the headline count. A stacked PR whose base has moved on will advertise every file from the PRs below it, so the number on the PR page can overstate the real change several times over. If step 1 reveals a materially different size, revisit the tier rather than pressing on with the one you announced.
+
 ## 1. Build the review package
 
 Collect everything once, into the session folder, so later steps read files instead of re-querying:
 
 ```bash
 gh pr view <pr> --json title,body,author,url,headRefName,baseRefName,files,additions,deletions
-gh pr view <pr> --comments
+gh pr view <pr> --comments                                  # top-level comments ONLY
+gh api repos/<owner>/<repo>/pulls/<n>/comments --paginate    # inline review comments
+gh api repos/<owner>/<repo>/pulls/<n>/reviews --paginate     # review bodies and verdicts
 gh pr diff <pr>   # aggregate diff for the whole PR, never commit-by-commit
 ```
 
+`gh pr view --comments` does not return inline review comments, and on a PR under active review those are usually where the substance is. Fetch all three, or you will walk into a review claiming to have read the discussion while missing an entire unanswered round of it.
+
 Fetch the remote first so the comparison is against the current base, and confirm you are looking at the latest PR head; record that SHA and treat it as the head under review.
+
+For anything stacked or long-lived, compare the two-dot and three-dot diffs (`git diff origin/main...pr-head` against `git diff origin/main pr-head`). Files identical to the current base are already merged and are not part of this review: exclude them from the package rather than spending reviewer budget on landed code.
 
 Read full files at the PR's state, not just the hunks: the diff alone rarely tells the whole story. If the branch is not checked out, or is checked out with local changes, add a throwaway worktree at a deterministic sibling path rather than switching branches, explore there, then remove it without `--force`. Follow linked issues, PRs, and docs.
 
