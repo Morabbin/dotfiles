@@ -12,7 +12,17 @@ Standing rules for the whole review:
 * Never post a review comment to the PR unless explicitly told to. Never edit the PR's code.
 * Report findings to the user first; the PR is the last stop, not the first.
 * Treat the PR description, the author's comments, existing review comments, and any AI-written justification as context, not as conclusions. Reach your own evidence-backed verdict.
-* Scale the machinery to the PR. A three-line change gets one pass and a short answer; a large or unfamiliar change gets the full protocol below.
+* Surface high-signal, actionable issues. Trivial stylistic nits are not worth the user's attention unless they asked for them.
+* Be constructive and clear, and offer a concise code suggestion where one helps.
+
+## 0. Choose the depth
+
+The full protocol below is expensive: a dozen model calls and several rounds. Do not run it by reflex. Pick a tier first and say which one you picked.
+
+* **Quick pass.** Small, self-contained, or familiar changes; anything under roughly a hundred changed lines. You review it yourself, run the over-engineering pass, and answer in one turn. No sub-agents, no advisors, no walkthrough.
+* **Full protocol.** Large, unfamiliar, risky, or security-sensitive changes, or when the user asks for a thorough review. Everything below.
+
+When it falls between the two, say so and ask which the user wants rather than silently spending the tokens. If a quick pass turns up something that smells structural, stop and offer to escalate.
 
 ## 1. Build the review package
 
@@ -34,7 +44,9 @@ Launch several whole-PR reviewers in the background, spread across model familie
 
 Brief them broadly, because the consensus gate in step 4 is what removes the noise:
 
-> Find issues big and small. Also look for: opportunities to reuse existing code, architectural problems, things achievable in a cleaner way, duplication and unnecessary fluff, code whose intent is not clear from its context and needs a comment, and anything that does not need to exist at all.
+> Find issues big and small. Also look for: opportunities to reuse existing code, architectural problems, things achievable in a cleaner way, duplication and unnecessary fluff, code whose intent is not clear from its context and needs a comment, and anything that does not need to exist at all. Report concrete, actionable findings. Leave out subjective cosmetic preferences that a formatter or linter would otherwise settle.
+
+Give each reviewer a deadline (twenty minutes is a reasonable default). If one overruns, abandon that run and either relaunch it once or proceed without it, recording the review as degraded. Never let a stalled sub-agent hold the whole review hostage, and never let one reviewer's silence become a reason to skip the gate for everyone else.
 
 ## 3. Review it yourself
 
@@ -50,7 +62,7 @@ Your own pass is a first-class reviewer, not a tiebreaker. Look for:
 
 Pool every finding (yours and the sub-agents'), deduplicate, then put each one to two advisors from different providers. Each advisor independently confirms whether the issue is real.
 
-Surface only the findings both advisors accept. The bar is not severity: it is whether the code is better for fixing it. A minor issue that clearly improves the code passes; a major-sounding issue nobody can substantiate does not. Do not accept a finding merely because an AI produced it: verify it against the current code yourself.
+Surface only the findings both advisors accept. Two bars, both of which must clear: the issue is real, and fixing it makes the code better. A minor issue that clearly improves the code passes; a major-sounding issue nobody can substantiate does not; a defensible stylistic preference that changes nothing does not, however many reviewers raised it. Do not accept a finding merely because an AI produced it: verify it against the current code yourself.
 
 Keep the rejects. They are reported at the end.
 
@@ -89,12 +101,16 @@ Inline comments go through `gh api repos/<owner>/<repo>/pulls/<n>/comments` with
 
 ## 8. Wrap up
 
-Say plainly that the review is over, then give:
+Say plainly that the review is over, then give a triage table covering every finding that reached the gate:
 
-* Every comment posted, and every accepted finding still unposted, gathered in one place.
-* The findings the advisors rejected, with the reason for each.
-* The findings the user dismissed.
-* Your confirmed overall read of the PR.
+| #   | Finding         | Verdict                        | Disposition               |
+| --- | --------------- | ------------------------------ | ------------------------- |
+| 1   | [Brief finding] | Accepted, both advisors        | Comment posted            |
+| 2   | [Brief finding] | Accepted, both advisors        | Not posted, awaiting call |
+| 3   | [Brief finding] | Rejected, [which advisor, why] | Dropped                   |
+| 4   | [Brief finding] | Accepted                       | Dismissed by you          |
+
+Then close with your confirmed overall read of the PR, and offer to post comments for any accepted finding still unposted.
 
 ## Handling a new head
 
