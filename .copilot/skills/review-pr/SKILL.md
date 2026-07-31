@@ -74,6 +74,14 @@ Surface only the findings both advisors accept. Two bars, both of which must cle
 
 Keep the rejects. They are reported at the end.
 
+## 4.1 Advisor simplification pass
+
+Once the gate is done, set both advisors a second, separate task: independently hunt for code to delete or shrink, using the over-engineering pass below. Do not hand this task to the fan-out reviewers. They are briefed for recall, and a dozen subjective simplification proposals is a worse starting point than two considered ones.
+
+Then cross-check: show each advisor the other's findings, and keep only what both call safe. That bar is stricter than the main gate, because a deletion that looks obvious in the diff can be load-bearing somewhere the diff does not show. Whatever survives joins the walkthrough as ordinary findings.
+
+On a quick pass there are no advisors, so you run the pass yourself and the tracing rule below still applies.
+
 ## 5. Plan the walkthrough
 
 Organise the accepted findings into logical sections by feature, behaviour, or concern, never file-by-file or commit-by-commit. One section may span several files, and one file may appear in several sections. Order them background first, then the core change, then supporting changes, then tests, docs, and cleanup.
@@ -130,10 +138,10 @@ Hunt for complexity to delete. The diff's best outcome is getting shorter. One l
 
 Tags:
 
-- `delete:` dead code, unused flexibility, speculative feature. Replacement: nothing.
-- `stdlib:` hand-rolled thing the standard library ships. Name the function.
+- `delete:` dead code, unused flexibility, speculative feature, compatibility path for a case that cannot arise. Replacement: nothing.
+- `stdlib:` hand-rolled thing the standard library, the platform, or this codebase already ships. Name the function.
 - `native:` dependency or code doing what the platform already does. Name the feature.
-- `yagni:` abstraction with one implementation, config nobody sets, layer with one caller.
+- `yagni:` abstraction with one implementation, config nobody sets, layer with one caller, parameter every caller passes the same value for.
 - `shrink:` same logic, fewer lines. Show the shorter form.
 
 Examples:
@@ -141,5 +149,7 @@ Examples:
 - `L12-38: stdlib: 27-line email validator. "@" check plus the confirmation mail is the real validation.`
 - `repo.py:L88: yagni: AbstractRepository with one implementation. Inline it until a second exists.`
 - `L30-44: shrink: manual loop builds dict. dict(zip(keys, values)), one line.`
+
+Before proposing any removal, trace it. Check the remaining callers, implementors, types, tests, fixtures, and any older path that still reaches the code, then say what you checked. An untraced `delete:` or `yagni:` is a guess, and a guess that turns out to be load-bearing costs the author more than the removal saves.
 
 Close the pass with `net: -<N> lines possible.` If there is nothing to cut, say `Lean already.` Keep correctness, security, and performance findings in the main review above; this pass is complexity only. Do not flag a single smoke test or `assert`-based self-check as bloat. List findings, do not apply them unless asked.
