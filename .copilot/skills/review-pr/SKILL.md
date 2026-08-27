@@ -64,6 +64,11 @@ Your own pass is a first-class reviewer, not a tiebreaker. Look for:
 * **Over-engineering:** complexity that should be deleted. Run the dedicated pass below.
 * **Best practices and conventions:** language and domain norms, plus the repository's established patterns.
 * **Scope adherence:** does the PR stay strictly within its intended scope, without unrelated changes?
+* **Stack topology:** for a stacked PR, verify that its base is a real code or
+  validation dependency. Compare the unique layer with the ultimate base, check for
+  equivalent work already merged, and flag independent or superseded layers for
+  extraction. Treat a two-layer stack with a large or review-intensive top as suspect
+  unless the dependency is concrete and documented.
 * **Text precision:** docs, prompts, comments, and user-facing strings that the change has made stale, and the clarity of any new text.
 
 ## 4. Gate findings through advisors
