@@ -1,5 +1,5 @@
 ---
-name: morabbins-advisors
+name: pr-advisors
 description: Use when a task, or another skill such as review-pr, needs shared persistent advisor models to gate findings or approve a deliverable. Load on "use advisors", "consult advisors", or "work with advisors".
 ---
 
@@ -31,4 +31,4 @@ This skill adds advice and review, not extra authority. It does not change the c
 
 ---
 
-Adapted from [Erik Krogh's `eriks-advisors` gist](https://gist.githubusercontent.com/erik-krogh/256f2f1ca9db3ba9733b97f8468335d6/raw/fdc38ca57b0eedf5c315f58a4e9e1a22c661a43f/eriks-advisors.md), renamed and generalized for the current user.
+Adapted from a colleague's review protocol, renamed and generalized for the current user.

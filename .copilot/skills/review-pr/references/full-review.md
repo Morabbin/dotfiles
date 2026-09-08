@@ -63,7 +63,7 @@ Record every agent finding in the plan as it arrives. Once the whole-PR reviewer
 
 ## 3. Gate findings through advisors
 
-Invoke the `morabbins-advisors` skill for the shared advisor models and defaults: use fresh advisors, separate from the step 2 fan-out.
+Invoke the `pr-advisors` skill for the shared advisor models and defaults: use fresh advisors, separate from the step 2 fan-out.
 
 Pool only your own findings from the entrypoint's "Review it yourself" pass together with the step 2 whole-PR fan-out's findings; these are the `F` findings (see step 6). Do not include the step 2 simplification fan-out here; its output stays withheld per step 2. Deduplicate the pooled findings: when the same issue arrives from more than one finder, keep its original ID and credit every independent finder, and keep that credit separate from which advisor merely validated it. Then put each one to both advisors. Surface only findings both accept. Two bars, both of which must clear: the issue is real, and fixing it makes the code better. A minor issue that clearly improves the code passes; a major-sounding issue nobody can substantiate does not; a defensible stylistic preference that changes nothing does not, however many reviewers raised it. Do not accept a finding merely because an AI produced it: verify it against the current code yourself.
 
@@ -93,7 +93,7 @@ For every accepted finding, record in the plan: the SHA it was reviewed against,
 
 ## 5. First complete walkthrough approval
 
-Get every advisor's explicit approval of the complete plan built in steps 3 through 4: every accepted finding, its explanation, its exact diff excerpt, and its placement in the walkthrough, per `morabbins-advisors`'s "approve the final result" step, applied here to the whole deliverable rather than one finding at a time.
+Get every advisor's explicit approval of the complete plan built in steps 3 through 4: every accepted finding, its explanation, its exact diff excerpt, and its placement in the walkthrough, per `pr-advisors`'s "approve the final result" step, applied here to the whole deliverable rather than one finding at a time.
 
 ### 5.1 Incorporate the simplification fan-out
 

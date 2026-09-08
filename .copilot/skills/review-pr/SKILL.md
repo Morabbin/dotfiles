@@ -83,4 +83,4 @@ Close the pass with `net: -<N> lines possible.` If there is nothing to cut, say 
 
 ---
 
-Adapted from [Erik Krogh's `erik-pr-review` gist](https://gist.githubusercontent.com/erik-krogh/256f2f1ca9db3ba9733b97f8468335d6/raw/13c3e14878ef1c925c020ba080bddd4401e06c7d/erik-pr-review.md), renamed and generalized for the current user, kept read-only, isolated in a worktree, and reachable by natural-language review requests rather than only by explicit skill name.
+Adapted from a colleague's review protocol, kept read-only, isolated in a worktree, and reachable by natural-language review requests rather than only by explicit skill name.

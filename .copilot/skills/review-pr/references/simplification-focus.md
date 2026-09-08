@@ -2,7 +2,7 @@
 
 Include this block verbatim in the prompts for the dedicated simplification fan-out reviewers (`full-review.md` step 2) and for the advisors' own independent simplification pass (`full-review.md` step 3.1). Do not include it in the whole-PR reviewer prompts.
 
-Verbatim, from Erik Krogh's `erik-pr-review` gist:
+Verbatim, adapted from a colleague's review protocol:
 
 <simplification_focus>
 Question whether each addition needs to exist before improving its details. Search for existing code and mechanisms that already perform the same job. Prefer extending those, using standard or native features, and keeping one shared implementation with direct data flow over wrappers, parallel implementations, and speculative compatibility paths.
