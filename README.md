@@ -37,5 +37,6 @@ With either secret unset, this step is skipped and the public install is all tha
 | `gh-api-markdown` | Post markdown bodies through `gh` / the GitHub API intact. |
 | `manage-prs` | Refresh, sync, or coordinate one or more PRs. |
 | `review-pr` | Review a pull request, including an over-engineering pass. |
+| `morabbins-advisors` | Shared persistent advisor models for gating findings or approving a deliverable. |
 | `address-pr-review` | Act on review feedback on a PR. |
 | `validate-changes` | Lint, format, test, and sync before committing or opening a PR. |
