@@ -28,7 +28,3 @@ If the advisors are used for a read-only investigation rather than a change, sti
 Get explicit approval from every advisor for the correctness, completeness, and minimality of the complete deliverable and its presentation, not an earlier proposal. Re-review subsequent changes, and surface unresolved disagreements honestly rather than claiming consensus that was not reached. If an advisor is unavailable or misses its deadline, say so plainly; do not fabricate its agreement or silently skip the gate.
 
 This skill adds advice and review, not extra authority. It does not change the calling task's scope, workflow, or permissions, including any restriction against builds, tests, lint, or dependency installation.
-
----
-
-Adapted from a colleague's review protocol, renamed and generalized for the current user.

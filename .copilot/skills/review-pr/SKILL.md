@@ -80,7 +80,3 @@ Examples:
 Before proposing any removal, trace it. Check the remaining callers, implementors, types, tests, fixtures, and any older path that still reaches the code, then say what you checked. An untraced `delete:` or `yagni:` is a guess, and a guess that turns out to be load-bearing costs the author more than the removal saves.
 
 Close the pass with `net: -<N> lines possible.` If there is nothing to cut, say `Lean already.` Keep correctness, security, and performance findings in the checklist above; this pass is complexity only. Do not flag a single smoke test or `assert`-based self-check as bloat. List findings, do not apply them unless asked. On a quick pass, also skim [references/simplification-focus.md](references/simplification-focus.md) yourself, since there are no advisors to run it as a separate pass; the tracing rule above still applies before any removal.
-
----
-
-Adapted from a colleague's review protocol, kept read-only, isolated in a worktree, and reachable by natural-language review requests rather than only by explicit skill name.
