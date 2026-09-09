@@ -19,7 +19,7 @@ Standing rules for the whole review:
 
 ## 0. Choose the depth
 
-The full protocol below is expensive: a dozen model calls and several rounds. Do not run it by reflex. Pick a tier first and say which one you picked.
+The full protocol below is expensive: it uses multiple model calls plus an advisor gate, potentially across several rounds. Do not run it by reflex. Pick a tier first and say which one you picked.
 
 * **Quick pass.** The change is both small and self-contained, or the user made an explicit lightweight request. Nothing else qualifies: familiarity with the code, on its own, is not enough if the change is large, risky, or security-sensitive.
 * **Full protocol.** Everything else: large, unfamiliar, risky, or security-sensitive changes, or whenever the user asks for a thorough review. Any one of these wins over the quick-pass bar even if some other property of the change looks small.

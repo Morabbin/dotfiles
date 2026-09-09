@@ -30,15 +30,11 @@ Read full files at the PR's state, not just the hunks: the diff alone rarely tel
 
 ## 2. Fan out reviewers
 
-Launch the following whole-PR reviewers in the background, all pointed at the review package:
+Fan-out is adaptive and bounded, not a fixed swarm: start small, expand only for a named gap, and stop as soon as a round adds nothing new. If the caller supplied a credit cap, treat it as a hard ceiling on the total reviewers spawned across every round below.
 
-* 2 x `gpt-6-astra`
-* 3 x `claude-opus-5`
-* 2 x `gemini-3.8-flash`
-* 1 x `grok-4.6`
-* 1 x `kimi-k3`
+### Round 1: baseline
 
-Brief them to look for issues both big and small, including:
+Launch exactly one whole-PR reviewer each from `gpt-5.6-sol`, `claude-sonnet-5`, and `gemini-3.8-flash` in the background, all pointed at the review package. Brief them to look for issues both big and small, including:
 
 * Opportunities to share or reuse existing code.
 * Architectural issues.
@@ -50,16 +46,17 @@ Brief them to look for issues both big and small, including:
 
 Leave out subjective cosmetic preferences that a formatter or linter would otherwise settle. Give each reviewer a deadline (twenty minutes is a reasonable default). Run all of them in the background: never block waiting on them, do your own review meanwhile, and say you are waiting only if you have nothing else to do. If one overruns its deadline, abandon that run and either relaunch it once or proceed without it, recording the review as degraded; never let a stalled sub-agent hold the whole review hostage, and never let one reviewer's silence become a reason to skip the gate for everyone else.
 
-Also launch a separate simplification fan-out, briefed only on finding code to delete or shrink, not the whole-PR brief above:
+### Expansion rounds
 
-* 2 x `gpt-6-astra`
-* 2 x `claude-opus-5`
-* 1 x `kimi-k3`
-* 1 x `grok-4.6`
+Do not start duplicate premium reviewers by default: three baseline findings that agree need no fourth opinion. Add at most one reviewer per explicitly named coverage gap or unresolved disagreement, such as a security-sensitive area the baseline round didn't touch, or two baseline reviewers reaching opposite conclusions on the same point, picking whichever provider or specialty best fits that specific gap. State the gap or disagreement that justifies each added reviewer before launching it.
 
-Give them the block in [simplification-focus.md](simplification-focus.md) verbatim, in addition to the review package. Their output is held back completely, not shown to the advisors or folded into any pool, until step 5.1 below: the advisors first have to reach a full, approved walkthrough plan on their own without seeing this fan-out's opinions.
+Brief an added reviewer with the artifact paths and the delta since the prior round (the specific gap or disagreement, plus anything already found), not a repeated copy of the full review package. Give it the same twenty-minute deadline and run it in the background alongside everything else.
 
-Record every agent finding in the plan as it arrives. Once the whole-PR reviewers are done, proceed straight to the gate; do not stop and wait for further instruction.
+Stop expanding as soon as a round adds no new accepted candidate: if the newest round only restates or fails to substantiate what an earlier round already found, treat fan-out as complete and move on. Do not keep adding reviewers hoping for a different answer.
+
+Also launch a separate simplification fan-out, briefed only on finding code to delete or shrink, not the whole-PR brief above: one `gpt-5.6-sol` and one `claude-sonnet-5`. Give them the block in [simplification-focus.md](simplification-focus.md) verbatim, in addition to the review package. Their output is held back completely, not shown to the advisors or folded into any pool, until step 5.1 below: the advisors first have to reach a full, approved walkthrough plan on their own without seeing this fan-out's opinions.
+
+Record every agent finding in the plan as it arrives. Once the whole-PR reviewers are done, proceed straight to the gate, where step 3 deduplicates the pooled findings before advisor review; do not stop and wait for further instruction.
 
 ## 3. Gate findings through advisors
 
@@ -71,7 +68,7 @@ Keep the rejects. They are reported at the end.
 
 ### 3.1 Advisor simplification pass
 
-Have both advisors independently hunt for code to delete or shrink, using [simplification-focus.md](simplification-focus.md). Do not hand this task to the whole-PR fan-out; they are briefed for recall, and a dozen subjective simplification proposals is a worse starting point than two considered ones. This is still only the advisors' own pass; the step 2 simplification fan-out remains withheld until step 5.1.
+Have both advisors independently hunt for code to delete or shrink, using [simplification-focus.md](simplification-focus.md). Do not hand this task to the whole-PR fan-out; they are briefed for recall, and a pile of subjective simplification proposals is a worse starting point than two considered ones. This is still only the advisors' own pass; the step 2 simplification fan-out remains withheld until step 5.1.
 
 Do not reject a simplification candidate merely because it is small or phrased as a question: an evidence-backed question both advisors agree is worth raising is a legitimate finding here, not a proven bug or an authorization to remove anything. Reject a candidate only when it is factually wrong, already handled, unsafe, or would not improve the code.
 
@@ -113,7 +110,7 @@ For each section:
 
    **F1. A one line description of the issue.**
    A paragraph, or two, explaining the issue and why it matters.
-   * Found by: 2 x gpt-6-astra, 1 x claude-opus-5
+   * Found by: gpt-5.6-sol, claude-sonnet-5
 
    If your own "Review it yourself" pass found the issue too, credit it by your actual model ID (from the session context), not a generic "myself" or "the main agent". Credit the user only on issues they explicitly raised, not on every issue they commented on.
 4. Weigh tradeoffs and alternatives where more than one reasonable approach exists, and try to establish why this one was chosen before arguing for another.
