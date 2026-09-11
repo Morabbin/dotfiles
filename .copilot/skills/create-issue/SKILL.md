@@ -31,4 +31,6 @@ Use a specific summary label such as `Evidence: affected runs` or `Query: failur
 
 When another document must deep-link to a collapsed section, optionally place a stable named anchor immediately before `<details>`, for example `<a name="evidence"></a>`. GitHub renders its fragment as `#user-content-evidence`.
 
-Keep each GitHub prose paragraph and list item on one physical line.
+Blank lines between semantic paragraphs are expected and necessary.
+
+Keep each GitHub prose paragraph and list item on one physical line. The no-hard-wrap rule forbids only physical line breaks inserted inside a sentence, prose paragraph, or list item to force column justification; it does not prohibit paragraph breaks.
