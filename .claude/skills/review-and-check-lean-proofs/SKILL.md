@@ -45,7 +45,7 @@ Read `references/statement-review.md` and apply it to every theorem the work rel
 - Write the statement back in plain English from the Lean alone, then compare with the claim.
 
 Run `scripts/statement-audit.lean` over the claimed theorems: it flags the mechanizable shapes (`vacuous`,
-`restates-hypothesis`, `hypotheses-not-needed`, `by-construction`, `unused-hypothesis`, `closed`). Each flag needs a
+`restates-hypothesis`, `hypotheses-not-needed`, `by-construction`, `unused-hypothesis`, `closed-example`). Each flag needs a
 recorded reason or a fix; keep the reasons in a committed file and fail CI on a new flag without one. Self-test the
 audit with `scripts/statement-audit-seeds.lean` (a negative control: if a seeded bad statement is not flagged, the
 audit is broken). In the code base this was built on, its first run found two theorems that were true only because
