@@ -1,0 +1,286 @@
+<title>Task graph</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: header + legend, then a left-to-right DAG (columns = earliest wave), a detail panel, then the wave list */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --fg: #18202b; --muted: #5b6676; --line: #d5dae2; --edge: #b4bcc8;
+  --haiku: #0f8a7e; --sonnet: #2f62d0; --opus: #7a45c9; --fable: #c27a0e;
+  --haiku-bg: #e3f4f1; --sonnet-bg: #e6edfb; --opus-bg: #f0e9fa; --fable-bg: #fbf0dd;
+  --done: #2e8540; --review: #b26a00; --gate: #b3261e; --focus: #18202b;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11151b; --surface: #19202a; --fg: #e6eaf0; --muted: #97a2b2; --line: #2c3542; --edge: #4a5566;
+  --haiku: #4cc7b8; --sonnet: #7aa2f5; --opus: #b48cf0; --fable: #f0b04a;
+  --haiku-bg: #15302d; --sonnet-bg: #1a2742; --opus-bg: #2a2140; --fable-bg: #362814;
+  --done: #5cc172; --review: #f0a640; --gate: #f27a72; --focus: #e6eaf0; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11151b; --surface: #19202a; --fg: #e6eaf0; --muted: #97a2b2; --line: #2c3542; --edge: #4a5566;
+  --haiku: #4cc7b8; --sonnet: #7aa2f5; --opus: #b48cf0; --fable: #f0b04a;
+  --haiku-bg: #15302d; --sonnet-bg: #1a2742; --opus-bg: #2a2140; --fable-bg: #362814;
+  --done: #5cc172; --review: #f0a640; --gate: #f27a72; --focus: #e6eaf0; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+h1 { font-family: var(--display); font-size: clamp(26px, 4vw, 36px); line-height: 1.1; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h2 { font-family: var(--display); font-size: 19px; margin: 0; }
+.lede { color: var(--muted); max-width: 70ch; margin: 6px 0 0; }
+.lede a { color: var(--sonnet); }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; }
+.stat { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 13px; font-variant-numeric: tabular-nums; }
+.dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.stat b { font-weight: 600; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.controls .lbl { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-right: 2px; }
+button.chip { font: inherit; font-size: 13px; padding: 5px 11px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
+button.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+button.chip:focus-visible, .node:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.graph-box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; overflow-y: hidden; }
+.graph-box svg { display: block; }
+.wave-label { font-family: var(--mono); font-size: 11px; fill: var(--muted); letter-spacing: .06em; }
+.edge { fill: none; stroke: var(--edge); stroke-width: 1.3; transition: opacity .15s; }
+.edge.hot { stroke: var(--fg); stroke-width: 2; }
+.edge.crit { stroke: var(--gate); stroke-width: 2; }
+.node { cursor: pointer; transition: opacity .15s; }
+.node rect.card { fill: var(--surface); stroke-width: 1.5; }
+.node .bar { stroke: none; }
+.node .tid { font-family: var(--mono); font-size: 11.5px; font-weight: 600; fill: var(--fg); }
+.node .tname { font-size: 11.5px; fill: var(--fg); }
+.node .tmodel { font-size: 10.5px; font-family: var(--mono); }
+.node.sel rect.card { stroke-width: 3; }
+.dim { opacity: .16; }
+.badge { font-family: var(--mono); font-size: 9.5px; font-weight: 600; }
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+@media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 10px; min-width: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+.panel .id { font-family: var(--mono); font-weight: 600; font-size: 13px; color: var(--muted); }
+.panel h3 { margin: 0; font-size: 16px; line-height: 1.35; font-weight: 600; text-wrap: balance; }
+.kv { display: grid; grid-template-columns: 92px minmax(0,1fr); gap: 6px 10px; font-size: 13.5px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 1px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 500; }
+.idlink { font-family: var(--mono); font-size: 12.5px; background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 5px; padding: 1px 6px; cursor: pointer; margin: 0 4px 4px 0; }
+.hint { color: var(--muted); font-size: 13px; margin: 0; }
+.waves { display: grid; gap: 10px; }
+.wave { display: grid; grid-template-columns: 96px minmax(0,1fr); gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.wave .w { font-family: var(--mono); font-size: 12px; color: var(--muted); padding-top: 3px; }
+.wave .items { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { display: inline-flex; gap: 6px; align-items: baseline; padding: 3px 9px; border-radius: 6px; font-size: 13px; border: 1px solid transparent; cursor: pointer; font-family: inherit; color: var(--fg); }
+.tag code { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.notes { color: var(--muted); font-size: 13.5px; max-width: 80ch; display: grid; gap: 6px; }
+.notes p { margin: 0; }
+@media (prefers-reduced-motion: reduce) { .edge, .node { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1 id="title">Task graph</h1>
+    <p class="lede">Each column is a wave: every task in a column can run at the same time once the columns before it are done. Colours show the model assigned to each task. Source: <a id="planLink" href="#" target="_blank" rel="noopener">the plan doc</a>.</p>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="controls" id="msControls"><span class="lbl">Milestone</span></div>
+  <div class="controls" id="viewControls"><span class="lbl">Show</span></div>
+
+  <div class="main">
+    <div class="graph-box" id="graphBox"><svg id="graph" role="img" aria-label="Task dependency graph"></svg></div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <section class="waves">
+    <h2>Waves</h2>
+    <div id="waves"></div>
+  </section>
+
+  <section class="notes">
+    <p>Red-outlined tasks need the owner's go-ahead before their outward step (deleting branches, going public, disclosure, filing upstream).</p>
+    <p>R-numbered nodes are review gates: an adversarial review of the whole project, an advisor pass, then a plan update. A gate waits for its milestone and blocks the next milestone's tasks that haven't started.</p>
+    <p>The critical path is the longest chain by task count; tasks have no size estimates, so treat it as a guide to ordering, not to time.</p>
+  </section>
+</div>
+
+<script>
+// Paste tasks.json here (the plan owner keeps it current, then republishes the page).
+const DATA = __TASKS_JSON__;
+const M = DATA.milestones;
+const T = DATA.tasks.map(t => ({id: t.id, ms: t.milestone, name: t.name, model: t.model, deps: t.deps, status: t.status || "todo", gate: !!t.gate, kind: t.kind || "task"}));
+if (DATA.title) { document.title = DATA.title; document.getElementById("title").textContent = DATA.title; }
+if (DATA.planUrl) document.getElementById("planLink").href = DATA.planUrl;
+
+const byId = Object.fromEntries(T.map(t => [t.id, t]));
+T.forEach(t => t.kids = []);
+T.forEach(t => t.deps.forEach(d => byId[d].kids.push(t.id)));
+
+// Wave = longest chain of prerequisites before the task
+const depth = {};
+const dOf = id => depth[id] ?? (depth[id] = byId[id].deps.length ? 1 + Math.max(...byId[id].deps.map(dOf)) : 0);
+T.forEach(t => t.w = dOf(t.id));
+const W = Math.max(...T.map(t => t.w)) + 1;
+
+// Critical path: longest chain ending anywhere
+const best = {};
+const chain = id => best[id] ?? (best[id] = (() => {
+  const t = byId[id]; if (!t.deps.length) return [id];
+  let b = []; t.deps.forEach(d => { const c = chain(d); if (c.length > b.length) b = c; });
+  return [...b, id];
+})());
+let crit = []; T.forEach(t => { const c = chain(t.id); if (c.length > crit.length) crit = c; });
+const critSet = new Set(crit);
+const critEdges = new Set(crit.slice(1).map((id, i) => crit[i] + ">" + id));
+
+const done = t => t.status === "done";
+const ready = t => t.status === "todo" && t.deps.every(d => byId[d].status === "done");
+
+const anc = id => { const s = new Set(); const go = x => byId[x].deps.forEach(d => { if (!s.has(d)) { s.add(d); go(d); } }); go(id); return s; };
+const desc = id => { const s = new Set(); const go = x => byId[x].kids.forEach(k => { if (!s.has(k)) { s.add(k); go(k); } }); go(id); return s; };
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"})[c]);
+const MODELS = DATA.models || ["Haiku", "Sonnet", "Opus", "Fable"];
+const mc = m => `var(--${esc(m.toLowerCase())})`;
+const mbg = m => `var(--${esc(m.toLowerCase())}-bg)`;
+
+// Stats
+const stats = document.getElementById("stats");
+stats.innerHTML = MODELS.map(m => `<span class="stat"><span class="dot" style="background:${mc(m)}"></span>${esc(m)} <b>${T.filter(t => t.model === m).length}</b></span>`).join("")
+  + `<span class="stat">Waves <b>${W}</b></span>`
+  + `<span class="stat">Critical path <b>${crit.length} tasks</b></span>`
+  + `<span class="stat">Need your go-ahead <b>${T.filter(t => t.gate).length}</b></span>`;
+
+// Order within each wave: milestone first, then barycenter sweeps to cut crossings
+const cols = Array.from({length: W}, () => []);
+T.forEach(t => cols[t.w].push(t));
+cols.forEach(c => c.sort((a, b) => a.ms.localeCompare(b.ms) || a.id.localeCompare(b.id, undefined, {numeric: true})));
+const pos = () => { cols.forEach(c => c.forEach((t, i) => t.y = i)); };
+pos();
+for (let it = 0; it < 6; it++) {
+  for (let w = 1; w < W; w++) {
+    cols[w].forEach(t => t.bc = t.deps.length ? t.deps.reduce((s, d) => s + byId[d].y, 0) / t.deps.length + (t.ms.charCodeAt(1) - 48) * 0.05 : t.y);
+    cols[w].sort((a, b) => a.bc - b.bc); pos();
+  }
+  for (let w = W - 2; w >= 0; w--) {
+    cols[w].forEach(t => t.bc = t.kids.length ? t.kids.reduce((s, k) => s + byId[k].y, 0) / t.kids.length : t.y);
+    cols[w].sort((a, b) => a.bc - b.bc); pos();
+  }
+}
+
+// Draw
+const NW = 168, NH = 64, CG = 54, RG = 14, PAD = 20, TOP = 34;
+const maxRows = Math.max(...cols.map(c => c.length));
+const width = PAD * 2 + W * NW + (W - 1) * CG;
+const height = TOP + PAD + maxRows * (NH + RG);
+const svg = document.getElementById("graph");
+svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+svg.setAttribute("width", width); svg.setAttribute("height", height);
+const NS = "http://www.w3.org/2000/svg";
+const el = (n, a = {}, p = svg) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; };
+cols.forEach((c, w) => {
+  const off = 0;
+  c.forEach((t, i) => { t.x = PAD + w * (NW + CG); t.py = TOP + off + i * (NH + RG); });
+  const lab = el("text", {x: PAD + w * (NW + CG), y: 20, class: "wave-label"}); lab.textContent = `WAVE ${w + 1}`;
+});
+const gE = el("g"), gN = el("g");
+const edges = [];
+T.forEach(t => t.deps.forEach(d => {
+  const s = byId[d]; const x1 = s.x + NW, y1 = s.py + NH / 2, x2 = t.x, y2 = t.py + NH / 2, mx = (x1 + x2) / 2;
+  const p = el("path", {d: `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`, class: "edge"}, gE);
+  edges.push({p, s: d, t: t.id});
+}));
+const wrap = (s, n) => { const words = s.split(" "); const out = []; let line = "";
+  for (const w of words) { if ((line + " " + w).trim().length > n) { out.push(line.trim()); line = w; } else line += " " + w; }
+  if (line.trim()) out.push(line.trim()); return out; };
+const nodes = {};
+T.forEach(t => {
+  const g = el("g", {class: "node", tabindex: 0, role: "button", "aria-label": `${t.id} ${t.name}, ${t.model}`, transform: `translate(${t.x},${t.py})`}, gN);
+  el("rect", {class: "card", width: NW, height: NH, rx: 7, stroke: t.gate ? "var(--gate)" : mc(t.model), "stroke-dasharray": t.gate ? "4 3" : "", fill: "var(--surface)"}, g);
+  el("rect", {class: "bar", x: 0, y: 0, width: 6, height: NH, rx: 3, fill: mc(t.model)}, g);
+  const id = el("text", {x: 14, y: 17, class: "tid"}, g); id.textContent = t.id;
+  const md = el("text", {x: NW - 8, y: 17, class: "tmodel", "text-anchor": "end", fill: mc(t.model)}, g); md.textContent = t.model;
+  const lines = wrap(t.name, 25).slice(0, 3);
+  if (wrap(t.name, 25).length > 3) lines[2] = lines[2].replace(/.{0,2}$/, "…");
+  lines.forEach((l, i) => { const tx = el("text", {x: 14, y: 32 + i * 13, class: "tname"}, g); tx.textContent = l; });
+  if (t.status !== "todo") {
+    const col = t.status === "done" ? "var(--done)" : t.status === "running" ? "var(--sonnet)" : t.status === "deferred" ? "var(--muted)" : "var(--review)";
+    const b = el("text", {x: 52, y: 17, class: "badge", fill: col}, g); b.textContent = t.status === "done" ? "DONE" : t.status === "running" ? "RUNNING" : t.status === "deferred" ? "DEFERRED" : "IN REVIEW";
+  }
+  const title = el("title", {}, g); title.textContent = `${t.id}: ${t.name}`;
+  g.addEventListener("click", () => select(t.id));
+  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(t.id); } });
+  nodes[t.id] = g;
+});
+
+// State and rendering
+let sel = null, msFilter = null, view = "all";
+const panel = document.getElementById("panel");
+function statusPill(t) {
+  if (t.status === "done") return `<span class="pill" style="color:var(--done);border:1px solid var(--done)">Done</span>`;
+  if (t.status === "deferred") return `<span class="pill" style="color:var(--muted);border:1px solid var(--line)">Deferred (TBD): approved list kept for you to run by hand</span>`;
+  if (t.status === "running") return `<span class="pill" style="color:var(--sonnet);border:1px solid var(--sonnet)">Running in its own thread</span>`;
+  if (t.status === "review") return `<span class="pill" style="color:var(--review);border:1px solid var(--review)">In review</span>`;
+  if (ready(t)) return `<span class="pill" style="color:var(--fg);border:1px solid var(--line)">Ready to start</span>`;
+  return `<span class="pill" style="color:var(--muted);border:1px solid var(--line)">Waiting on ${t.deps.filter(d => byId[d].status !== "done").length} task(s)</span>`;
+}
+const links = ids => ids.length ? ids.map(i => `<button class="idlink" data-id="${esc(i)}">${esc(i)}</button>`).join("") : `<span class="hint">None</span>`;
+function renderPanel() {
+  if (!sel) {
+    panel.innerHTML = `<h2>Pick a task</h2><p class="hint">Click or tab to any task to see what it needs, what it unlocks, and its model. Its prerequisites and dependants stay lit; everything else fades.</p>
+      <dl class="kv"><dt>Start now</dt><dd>${links(T.filter(ready).map(t => t.id))}</dd><dt>Critical path</dt><dd>${links(crit)}</dd></dl>`;
+  } else {
+    const t = byId[sel];
+    panel.innerHTML = `<div class="id">${esc(t.id)} · ${esc(t.ms)} ${esc(M[t.ms])} · wave ${t.w + 1}</div><h3>${esc(t.name)}</h3>
+      <dl class="kv">
+        <dt>Model</dt><dd><span class="pill" style="background:${mbg(t.model)};color:${mc(t.model)}">${esc(t.model)}</span></dd>
+        <dt>Status</dt><dd>${statusPill(t)}</dd>
+        ${t.gate ? `<dt>Gate</dt><dd style="color:var(--gate)">Its outward step needs your go-ahead</dd>` : ""}
+        <dt>Needs</dt><dd>${links(t.deps)}</dd>
+        <dt>Unlocks</dt><dd>${links(t.kids)}</dd>
+        <dt>Critical path</dt><dd>${critSet.has(t.id) ? "Yes" : "No"}</dd>
+      </dl><button class="chip" id="clearSel">Clear selection</button>`;
+    document.getElementById("clearSel").onclick = () => select(null);
+  }
+  panel.querySelectorAll(".idlink").forEach(b => b.onclick = () => select(b.dataset.id));
+}
+function render() {
+  let lit = null;
+  if (sel) { lit = new Set([sel, ...anc(sel), ...desc(sel)]); }
+  else if (view === "crit") lit = critSet;
+  else if (view === "ready") lit = new Set(T.filter(ready).map(t => t.id));
+  else if (view === "gate") lit = new Set(T.filter(t => t.gate).map(t => t.id));
+  T.forEach(t => {
+    const on = (!lit || lit.has(t.id)) && (!msFilter || t.ms === msFilter);
+    nodes[t.id].classList.toggle("dim", !on);
+    nodes[t.id].classList.toggle("sel", t.id === sel);
+  });
+  edges.forEach(e => {
+    const on = (!lit || (lit.has(e.s) && lit.has(e.t))) && (!msFilter || byId[e.t].ms === msFilter || byId[e.s].ms === msFilter);
+    e.p.classList.toggle("dim", !on);
+    e.p.classList.toggle("hot", !!sel && on);
+    e.p.classList.toggle("crit", !sel && view === "crit" && critEdges.has(e.s + ">" + e.t));
+  });
+  renderPanel();
+}
+function select(id) {
+  sel = id; render();
+  if (id) { const t = byId[id], box = document.getElementById("graphBox"); const sx = t.x - box.clientWidth / 2 + NW / 2; box.scrollTo({left: Math.max(0, sx), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"}); }
+}
+
+// Controls
+const chip = (label, pressed, on) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = label; b.setAttribute("aria-pressed", pressed); b.onclick = on; return b; };
+const msC = document.getElementById("msControls");
+const msBtns = [["All", null], ...Object.keys(M).map(k => [`${k} ${M[k]}`, k])].map(([l, k]) => {
+  const b = chip(l, k === null, () => { msFilter = k; msBtns.forEach(x => x.setAttribute("aria-pressed", x === b)); render(); }); msC.appendChild(b); return b; });
+const vC = document.getElementById("viewControls");
+const vBtns = [["Everything", "all"], ["Critical path", "crit"], ["Ready to start", "ready"], ["Needs your go-ahead", "gate"]].map(([l, k]) => {
+  const b = chip(l, k === "all", () => { view = k; sel = null; vBtns.forEach(x => x.setAttribute("aria-pressed", x === b)); render(); }); vC.appendChild(b); return b; });
+
+// Wave list
+document.getElementById("waves").innerHTML = cols.map((c, w) => `<div class="wave"><div class="w">Wave ${w + 1}<br>${c.length} task${c.length > 1 ? "s" : ""}</div><div class="items">${
+  [...c].sort((a, b) => a.id.localeCompare(b.id, undefined, {numeric: true})).map(t => `<button class="tag" data-id="${esc(t.id)}" style="background:${mbg(t.model)};${t.gate ? "border-color:var(--gate);border-style:dashed" : ""}" title="${esc(t.name)}"><code style="color:${mc(t.model)}">${esc(t.id)}</code>${esc(t.model)}${t.status === "done" ? " · done" : t.status === "running" ? " · running" : t.status === "deferred" ? " · deferred" : t.status === "review" ? " · in review" : ""}</button>`).join("")
+}</div></div>`).join("");
+document.querySelectorAll("#waves .tag").forEach(b => b.onclick = () => { select(b.dataset.id); document.getElementById("graphBox").scrollIntoView({behavior: "smooth", block: "center"}); });
+
+render();
+</script>
