@@ -13,7 +13,7 @@ theorem byConstruction (n : Nat) : (fun x => x) n = n := rfl
 theorem unused (n m : Nat) (_h : n = m) : n + m = m + n := Nat.add_comm n m
 -- expect: hypotheses-not-needed, unused-hypothesis (through the cited theorem)
 theorem unusedCited (n m : Nat) (h : n = m) : n + m = m + n := unused n m h
--- expect: closed
+-- expect: closed-example
 theorem closed : (2 : Nat) + 2 = 4 := rfl
 -- expect: no flag
 theorem sound (n m : Nat) (h : n ≤ m) : n < m + 1 := Nat.lt_succ_of_le h

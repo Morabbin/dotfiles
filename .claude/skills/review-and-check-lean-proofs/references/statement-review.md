@@ -65,4 +65,4 @@ Disagreements are findings. An LLM-produced informalization is a useful second r
 ## Mechanical help
 
 `scripts/statement-audit.lean` flags: `vacuous`, `restates-hypothesis`, `hypotheses-not-needed`, `by-construction`,
-`unused-hypothesis`, `closed`. Each flag is a question, not a verdict; record the answer.
+`unused-hypothesis`, `closed-example`. Each flag is a question, not a verdict; record the answer.

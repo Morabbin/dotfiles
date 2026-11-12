@@ -11,11 +11,12 @@ environment and looks for six shapes of a statement that says less than it reads
   `simp_all` proves `False` from them).
 * `restates-hypothesis`: the conclusion is one of the hypotheses (`assumption` closes it).
 * `hypotheses-not-needed`: the conclusion holds with every hypothesis dropped (`rfl`, `trivial`, `omega` or `simp`
-  proves it without them), so the hypotheses only narrow the claim. This also catches a conclusion that is true
-  because a type has only one value.
+  proves it without them), so the hypotheses only narrow the claim, or the conclusion holds for another reason (a
+  type with one value makes every equation in it true).
 * `by-construction`: no hypotheses, and the conclusion holds by `rfl` or `trivial`: true by unfolding definitions.
 * `unused-hypothesis`: a hypothesis the proof never uses, looking through a proof that cites another theorem.
-* `closed`: no binders at all: a statement about fixed values, a worked example rather than a general claim.
+* `closed-example`: no binders, and `decide`, `rfl` or `trivial` settles it: a statement about fixed values, a
+  worked example rather than a general claim.
 
 A shape is not a fault by itself; each flag needs a reviewer's reason. Attempts are bounded by heartbeats, so a shape
 a bounded search cannot show is not found: passing the audit does not show the statement means what its prose says.
@@ -127,8 +128,7 @@ private def jsonStr (s : String) : String := "\"" ++ (s.replace "\\" "\\\\" |>.r
   for c in names do
     n := n + 1
     let some (.thmInfo t) := (← getEnv).find? c | continue
-    let mut flags : Array (String × String) := #[]
-    let r ← forallTelescope t.type fun xs concl => do
+    let flags ← forallTelescope t.type fun xs concl => do
       let mut flags : Array (String × String) := #[]
       let mut hyps : Array Expr := #[]
       let mut idx : Array Nat := #[]
@@ -157,14 +157,15 @@ private def jsonStr (s : String) : String := "\"" ++ (s.replace "\\" "\\\\" |>.r
           unless ← binderUsed c k do
             flags := flags.push ("unused-hypothesis", toString (← xs[k]!.fvarId!.getUserName))
       else if xs.isEmpty then
-        -- a statement about fixed values: a worked example, not a claim about every input
-        flags := flags.push ("closed", "no binders")
+        -- a statement about fixed values that evaluation settles: a worked example, not a claim about every input
+        -- (a closed statement whose predicate quantifies inside, or an equation between functions, needs a real proof)
+        if let some tac ← firstCloser concl ["decide", "rfl", "trivial"] then
+          flags := flags.push ("closed-example", tac)
       else
         let gBare ← mkForallFVars data concl
         if let some tac ← firstCloser gBare ["intros; rfl", "intros; trivial"] then
           flags := flags.push ("by-construction", tac)
       return flags
-    flags := r
     for (kind, how) in flags do
       IO.println s!"\{\"theorem\": {jsonStr (toString c)}, \"shape\": {jsonStr kind}, \"how\": {jsonStr how}}"
   IO.println s!"-- statement-audit end {n}"
