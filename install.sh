@@ -15,6 +15,16 @@ cp -r "$SRC/.copilot/." "$HOME/.copilot/"
 
 echo "✅ Copilot instructions and skills installed to ~/.copilot/"
 
+# Shared skills: copy .claude/skills/<name>/ into both ~/.claude/skills/ (Claude
+# Code) and ~/.copilot/skills/ (Copilot CLI); both read the same SKILL.md format.
+if [ -d "$SRC/.claude/skills" ]; then
+  for dest in "$HOME/.claude/skills" "$HOME/.copilot/skills"; do
+    mkdir -p "$dest"
+    cp -r "$SRC/.claude/skills/." "$dest/"
+  done
+  echo "✅ Shared skills installed to ~/.claude/skills/ and ~/.copilot/skills/"
+fi
+
 # Optional private overlay bootstrap.
 #
 # Codespaces auto-installs dotfiles by cloning this repo with the codespace's

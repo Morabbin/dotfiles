@@ -7,6 +7,8 @@ Running `install.sh` copies everything under [`.copilot/`](.copilot) into `~/.co
 - [`.copilot/copilot-instructions.md`](.copilot/copilot-instructions.md) -- always-on global rules for Copilot CLI.
 - [`.copilot/skills/`](.copilot/skills) -- task-specific skills Copilot can invoke on demand.
 
+It also copies the shared skills in [`.claude/skills/`](.claude/skills) into both `~/.claude/skills/` (global Claude Code skills) and `~/.copilot/skills/` (Copilot CLI).
+
 ## Install
 
 ```bash
@@ -40,3 +42,12 @@ With either secret unset, this step is skipped and the public install is all tha
 | `pr-advisors` | Shared persistent advisor models for gating findings or approving a deliverable. |
 | `address-pr-review` | Act on review feedback on a PR. |
 | `validate-changes` | Lint, format, test, and sync before committing or opening a PR. |
+
+## Shared skills (Claude Code and Copilot)
+
+Kept in `.claude/skills/` and installed into both `~/.claude/skills/` and `~/.copilot/skills/`.
+
+| Skill | Purpose |
+| --- | --- |
+| `review-and-check-lean-proofs` | Review Lean 4 theorems adversarially and check them beyond "it compiles": statement vs intent, axioms and trusted code, multi-kernel replay, prose vs Lean. |
+| `graph-plan` | Plan and run a large multi-PR project as a task dependency graph executed by parallel Claude threads, with review gates between milestones. |

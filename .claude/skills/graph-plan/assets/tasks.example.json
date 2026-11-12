@@ -1,0 +1,17 @@
+{
+  "title": "Example task graph",
+  "planUrl": "https://example.com/plan",
+  "models": ["Haiku", "Sonnet", "Opus", "Fable"],
+  "milestones": { "M0": "Foundation", "M1": "Core library", "M2": "Integrations" },
+  "tasks": [
+    { "id": "T0.1", "milestone": "M0", "name": "One local check command for build, tests, lint and audits", "model": "Haiku", "deps": [], "status": "done" },
+    { "id": "T0.2", "milestone": "M0", "name": "Rewrite the README around the new goal", "model": "Sonnet", "deps": [], "status": "done" },
+    { "id": "T0.3", "milestone": "M0", "name": "Delete stale branches", "model": "Haiku", "deps": [], "status": "running", "gate": true },
+    { "id": "T1.1", "milestone": "M1", "name": "Shared types", "model": "Opus", "deps": ["T0.1"], "status": "running" },
+    { "id": "T1.2", "milestone": "M1", "name": "Parser with a round-trip proof", "model": "Opus", "deps": ["T1.1"] },
+    { "id": "T1.3", "milestone": "M1", "name": "Benchmarks and a performance log", "model": "Sonnet", "deps": ["T1.2"] },
+    { "id": "R1", "milestone": "M1", "kind": "gate", "name": "Adversarial review of the whole project after M0 and M1, advisor pass, plan update; T1.3 carved out to R2", "model": "Fable", "deps": ["T0.1", "T0.2", "T0.3", "T1.1", "T1.2"] },
+    { "id": "T2.1", "milestone": "M2", "name": "First integration harness", "model": "Sonnet", "deps": ["T1.2", "R1"] },
+    { "id": "T2.2", "milestone": "M2", "name": "Disclose findings to maintainers", "model": "Haiku", "deps": ["T2.1"], "gate": true }
+  ]
+}
