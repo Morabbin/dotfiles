@@ -15,6 +15,45 @@ with no network after dependency resolution and only `.lake` writable. Install `
 user namespaces or a setuid binary). Exit codes: 0 accepted, 1 rejected, 2 could not start (no `bwrap`, no
 `lake-manifest.json`, bad config).
 
+## Which declarations to check: changed theorems and their dependents
+
+Rule (SKILL.md, question 4): all six checkers and the comparator run on every new or changed theorem and on its
+dependents, on every change. "Dependents" means every relied-on theorem whose closure of used constants contains a
+changed declaration, whether that declaration is a theorem or a definition, instance or lemma.
+
+- **Default: replay the whole relied-on set.** Export the relied-on theorems by name (`lake env leanexport Module --
+  name…`, which includes everything they use, plus the comparator's extra names below) and run every checker on that
+  export. Any dependent of a change is in it by construction. In a project with a naming convention for relied-on
+  theorems (`spec_*`, a `comparator.json` list), that list is the name set.
+- **Narrowing (only when the full replay is too slow).** Compute the changed declarations from the diff (every
+  declaration in an edited region, including ones a changed macro or notation elaborates differently). Then compute
+  the reverse closure: in Lean, for each relied-on theorem `t`, walk `ConstantInfo.getUsedConstantsAsSet` from `t`'s
+  constant info transitively and keep `t` if the walk meets a changed name. Export the changed theorems plus that
+  dependent set and replay it. Record which set was checked; a narrowed run does not replace the next full one.
+- **Run the six explicitly** on each export `F`, with `C` the challenge module exported with the same names (one
+  thread and an unlimited stack for nanoda; see below):
+
+  ```
+  ulimit -s unlimited
+  leanchecker --silent --from-export F
+  leanchecker-paranoid --silent --from-export F
+  lean4lean --import F
+  nanoda_bin nanoda.json   # {"export_file_path": "F", "permitted_axioms": [...], "num_threads": 1,
+                           #  "unpermitted_axiom_hard_error": true, "nat_extension": true,
+                           #  "string_extension": true}
+  con-leche F
+  con-ron F
+  lake comparator --config comparator.json --challenge-from-export C --solution-from-export F
+  ```
+
+  `lake check --paranoid` / `lake comparator --paranoid` run the same six in one command where they fit (no path
+  dependency outside the sandbox, no nanoda stack overflow).
+- **Every checker must give a verdict.** Exit 0 from each of the seven commands is the pass. A crash, a timeout or a
+  missing binary is "not checked", never "accepted"; fix the run or report the theorems as unchecked. Keep each
+  checker's log and timing with the run so the verdicts can be cited.
+- **Regenerate the challenge first** when a statement changed, so the comparator judges the new statement rather
+  than failing on, or silently missing, the old one.
+
 ## Pitfalls
 
 - **Path dependencies outside the project.** The sandbox binds `/` read-only and covers home directories, so a
@@ -36,7 +75,8 @@ user namespaces or a setuid binary). Exit codes: 0 accepted, 1 rejected, 2 could
   `con-leche F`, `con-ron F`.
 - **Time.** Measured on a ~77k-declaration export: `lake check` about 2 minutes, `--paranoid` about 7 minutes (the
   external kernels dominate); a ~22k-declaration export of a large library's theorems took nanoda about 4 minutes on
-  one thread. Run `--paranoid` nightly or on demand, the plain checks on every change.
+  one thread. That is the cost of every change that touches a theorem or something one depends on (see "Which
+  declarations to check"); run it then, not only nightly. Changes that touch no Lean declaration can skip it.
 - **Challenge warnings.** A challenge full of `sorry` prints one warning per theorem; filter them from logs.
 - **One import set per process.** Tools that elaborate several files with `processHeader` in one process can see
   stale namespaces; run one process per file.

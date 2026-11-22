@@ -1,6 +1,6 @@
 ---
 name: review-and-check-lean-proofs
-description: Review Lean 4 theorems adversarially and check them mechanically beyond "it compiles" - statement vs intent, vacuous or unneeded hypotheses, by-construction claims, axioms and trusted code, sandboxed multi-kernel replay with lake check/lake comparator, and prose-vs-Lean claims. Use when reviewing, auditing or adding CI for Lean proofs, when someone says a result "is checked in Lean", or before relying on AI-written Lean.
+description: Review Lean 4 theorems adversarially and check them mechanically beyond "it compiles" - statement vs intent, vacuous or unneeded hypotheses, by-construction claims, axioms and trusted code, sandboxed multi-kernel replay with lake check/lake comparator (all six checkers on every new or changed theorem and its dependents), and prose-vs-Lean claims. Use when reviewing, auditing or adding CI for Lean proofs, when someone says a result "is checked in Lean", or before relying on AI-written Lean.
 ---
 
 # Review and check Lean proofs
@@ -88,6 +88,26 @@ See `references/axioms-and-trust.md`. In short:
 toolchains use `lean4checker` and `nanoda` over a `lean4export` dump. Commands, timings and the sandbox's path
 pitfall: `references/kernels-and-comparator.md`.
 
+**Rule: every new or changed theorem, and everything that depends on it, goes through all six checkers and the
+comparator before it is relied on.** That is Lean's kernel (`leanchecker`), `leanchecker-paranoid`, `lean4lean`,
+`nanoda`, `con-leche` and `con-ron`, plus `lake comparator` against the committed challenge. It applies to every
+change, not just nightly: a theorem added, a statement or proof changed, or a definition, lemma or instance changed
+that some relied-on theorem uses. The set to check is:
+
+- every theorem the change adds or edits (statement or proof);
+- every declaration the change edits that is not a theorem (definitions, instances, lemmas, macros that elaborate
+  into them);
+- **the dependents**: every relied-on theorem whose transitive closure of used constants contains any of the above.
+  A changed definition changes what every theorem mentioning it means and how its proof checks, so those are
+  re-checked even though their text did not change.
+
+Exporting the relied-on theorems together with everything they use (as `lake comparator` does) and replaying that
+covers the dependents automatically and is the default; narrow to the computed dependent set only when a full replay
+is too slow, and say so. Report each checker's verdict per export (accepts / rejects / could not run). A checker that
+could not run (missing binary, stack overflow, out of memory) is not a pass: fix the run (see the nanoda pitfall) or
+report the theorem as not yet checked. Computing the dependents and running the six by hand:
+`references/kernels-and-comparator.md`, "Which declarations to check".
+
 ## 5. Prose vs Lean
 
 Every claim in README, docs, papers, PR text or coverage tables names the theorem that backs it, and that theorem's
@@ -98,8 +118,9 @@ the running code does not use, a special case, or holds by construction. Reading
 ## Wiring it into CI
 
 `references/ci-wiring.md` gives a step list: fast checks on every change (hygiene grep, axiom audit, statement audit
-with its reasons file and self-test, challenge freshness) and slower ones on demand or nightly (`lake check
---paranoid`, `lake comparator --paranoid`, mutation testing).
+with its reasons file and self-test, challenge freshness), the six checkers and the comparator on every change that
+touches a theorem or anything one uses (question 4's rule), and slower ones on demand or nightly (`lake check
+--paranoid` on whole packages, mutation testing).
 
 ## Reporting
 

@@ -32,7 +32,8 @@ set_option maxHeartbeats 0
 
 /-- The audited theorems: every theorem declared in a module whose name starts with one of the prefixes in the
 environment variable `AUDIT_MODULES` (comma-separated, e.g. `MyLib.Spec,MyLib.Main`), optionally only those whose
-last name component starts with `AUDIT_NAME_PREFIX` (e.g. `spec_`), plus the self-test seeds (`AuditSeed.*`). -/
+last name component starts with `AUDIT_NAME_PREFIX` (e.g. `spec_`), plus the self-test seeds (`AuditSeed.*`; only
+those when `AUDIT_SEEDS_ONLY` is set). -/
 private def audited : MetaM (Array Name) := do
   let env ← getEnv
   let mods := ((← IO.getEnv "AUDIT_MODULES").getD "").splitOn "," |>.filter (· ≠ "") |>.map String.toName
@@ -47,6 +48,8 @@ private def audited : MetaM (Array Name) := do
     if info matches .thmInfo _ && !isPrivateName n && !n.isInternal && lastOk n && inMods n then acc.push n else acc
   let seeds := env.constants.map₂.foldl (init := #[]) fun acc n info =>
     if (`AuditSeed).isPrefixOf n && info matches .thmInfo _ then acc.push n else acc
+  -- `AUDIT_SEEDS_ONLY` set: the self-test, on the seeds alone
+  if (← IO.getEnv "AUDIT_SEEDS_ONLY").isSome then return seeds.qsort Name.lt
   return (thms ++ seeds).qsort Name.lt
 
 /-- Runs a tactic on a goal, within a heartbeat budget; true when it closes the goal with no error. -/
