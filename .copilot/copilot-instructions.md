@@ -32,3 +32,21 @@ These are always-on global rules. Task-specific procedures live in skills (`.cop
 * Match the model to the task: a small/cheap model for mechanical work, a heavy model for design and architecture.
 * Never block the main session waiting (e.g. CI/sleeps). Delegate waits to background processes.
 * Summarize status per milestone.
+
+### Reader-facing writing
+
+Apply to issue and PR bodies and comments, code comments, and Slack posts.
+
+- Lead with the problem, result or needed action. Include only context the reader
+  needs; do not assume they followed the session.
+- Use plain language and short, complete sentences. Brevity must not become dense
+  shorthand or unexplained jargon.
+- Say each thing once. Cut filler, obvious explanations, unnecessary directions,
+  and narration of tools, skills or process.
+- Match claims to evidence. Distinguish facts, inferences and unknowns; retain
+  necessary qualifications. Do not present planned or partially verified work as
+  complete.
+- Make required actions concrete: say what to do and how to check the result,
+  rather than asking vaguely for "confirmation".
+- Before returning or posting, remove anything that adds no useful information.
+  Preserve meaning and necessary context, not a target word count.

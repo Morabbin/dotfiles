@@ -9,6 +9,8 @@ Running `install.sh` copies everything under [`.copilot/`](.copilot) into `~/.co
 
 It also copies the shared skills in [`.claude/skills/`](.claude/skills) into both `~/.claude/skills/` (global Claude Code skills) and `~/.copilot/skills/` (Copilot CLI).
 
+The "Reader-facing writing" section of the Copilot instructions is the single source for shared writing rules. `install.sh` extracts it to `~/.claude/reader-facing-writing.md` and adds an `@~/.claude/reader-facing-writing.md` import to `~/.claude/CLAUDE.md` (appended once; the rest of that file is left alone).
+
 ## Install
 
 ```bash

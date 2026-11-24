@@ -11,7 +11,7 @@ Use when creating a new pull request.
 2. Use the PR template if one exists (e.g., `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE/`) to structure the description.
 3. Invoke the `validate-changes` skill.
 4. If the PR body contains substantial markdown or multiline / shell-sensitive content, follow the `gh-api-markdown` skill.
-5. Create the PR as a **draft**, with a clear title and a description following the template, so step 7 below has an actual PR to inspect.
+5. Create the PR as a **draft**, with a clear title and a description following the template and the "Reader-facing writing" section of the global instructions, so step 7 below has an actual PR to inspect.
 6. Assign me (`Morabbin`) to any PR created for me. If assignment fails, leave it unassigned and report the exact failure. Do not retry with a guessed username.
 7. Before presenting the PR as ready, invoke the `review-pr` skill on it. This initial gate applies only the first time a PR is created, not to routine later updates, aside from `review-pr`'s own new-head re-evaluation folded into this same gate. Let `review-pr` pick its own quick or full tier; validate-changes having passed is not a reason to skip this. If it comes back with no accepted findings, go to step 8. If it does have accepted findings:
    * Keep the PR in draft.
