@@ -34,6 +34,9 @@ awk '/^### Reader-facing writing$/{p=1} p&&/^#{2,3} /&&!/^### Reader-facing writ
 IMPORT_LINE="@~/.claude/reader-facing-writing.md"
 touch "$HOME/.claude/CLAUDE.md"
 if ! grep -qxF "$IMPORT_LINE" "$HOME/.claude/CLAUDE.md"; then
+  if [ -s "$HOME/.claude/CLAUDE.md" ] && [ -n "$(tail -c 1 "$HOME/.claude/CLAUDE.md")" ]; then
+    printf '\n' >> "$HOME/.claude/CLAUDE.md"
+  fi
   printf '%s\n' "$IMPORT_LINE" >> "$HOME/.claude/CLAUDE.md"
 fi
 echo "✅ Reader-facing writing rules installed for Claude Code (~/.claude/CLAUDE.md)"
