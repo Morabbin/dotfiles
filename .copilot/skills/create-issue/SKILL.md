@@ -7,7 +7,7 @@ description: Use when the user asks to create, open, or file a new issue.
 
 Use when creating a new issue.
 
-1. Create the issue with a clear title and body.
+1. Create the issue with a clear title and a body that follows the "Reader-facing writing" section of the global instructions.
 2. Assign me (`Morabbin`) to any issue created for me. If assignment fails, leave it unassigned and report the exact failure. Do not retry with a guessed username.
 
 ## Structuring long issue bodies

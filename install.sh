@@ -25,6 +25,22 @@ if [ -d "$SRC/.claude/skills" ]; then
   echo "✅ Shared skills installed to ~/.claude/skills/ and ~/.copilot/skills/"
 fi
 
+# Shared writing rules: extract the "Reader-facing writing" section of the
+# Copilot instructions (the single source) for Claude Code, and import it from
+# ~/.claude/CLAUDE.md without overwriting the rest of that file.
+mkdir -p "$HOME/.claude"
+awk '/^### Reader-facing writing$/{p=1} p&&/^#{2,3} /&&!/^### Reader-facing writing$/{exit} p' \
+  "$SRC/.copilot/copilot-instructions.md" > "$HOME/.claude/reader-facing-writing.md"
+IMPORT_LINE="@~/.claude/reader-facing-writing.md"
+touch "$HOME/.claude/CLAUDE.md"
+if ! grep -qxF "$IMPORT_LINE" "$HOME/.claude/CLAUDE.md"; then
+  if [ -s "$HOME/.claude/CLAUDE.md" ] && [ -n "$(tail -c 1 "$HOME/.claude/CLAUDE.md")" ]; then
+    printf '\n' >> "$HOME/.claude/CLAUDE.md"
+  fi
+  printf '%s\n' "$IMPORT_LINE" >> "$HOME/.claude/CLAUDE.md"
+fi
+echo "✅ Reader-facing writing rules installed for Claude Code (~/.claude/CLAUDE.md)"
+
 # Optional private overlay bootstrap.
 #
 # Codespaces auto-installs dotfiles by cloning this repo with the codespace's
