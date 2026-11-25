@@ -19,6 +19,18 @@ for (const t of tasks) {
     errors.push(`${t.id}: done but depends on unfinished ${t.deps.filter(d => status(byId[d]) !== "done").join(", ")}`);
 }
 if (tasks.length !== Object.keys(byId).length) errors.push("duplicate task ids");
+// Asks ledger: every owner ask is delivered by some task, and every narrowing has the owner's decision.
+const asks = data.asks || [];
+const askIds = new Set(asks.map(a => a.id));
+for (const t of tasks) for (const a of t.asks || []) if (!askIds.has(a)) errors.push(`${t.id}: unknown ask ${a}`);
+const scope = [];
+if (!data.asks) scope.push("no asks ledger in tasks.json: owner asks are not traced to tasks");
+for (const a of asks) {
+  const by = tasks.filter(t => (t.asks || []).includes(a.id) && status(t) !== "deferred");
+  const cov = a.coverage || "full";
+  if (cov !== "dropped" && !by.length) scope.push(`${a.id} has no scheduled task: "${a.text}"`);
+  if (cov !== "full" && !a.decision) scope.push(`${a.id} is ${cov} without an owner decision: "${a.text}"`);
+}
 
 // Wave = longest dependency chain below a task; detects cycles on the way.
 const depth = {}, visiting = new Set();
@@ -53,7 +65,7 @@ const out = {
   counts: Object.fromEntries(["todo", "running", "review", "done", "deferred"].map(s => [s, tasks.filter(t => status(t) === s).length])),
   waves, critical,
   startable: startable.map(t => ({ id: t.id, model: t.model, needsOwner: !!t.gate, name: t.name })),
-  gates,
+  gates, scope,
 };
 if (flag === "--render") {
   const tpl = readFileSync(new URL("../assets/task-graph-template.html", import.meta.url), "utf8");
@@ -68,3 +80,5 @@ console.log(`critical path (${critical.length}): ${critical.join(" -> ")}`);
 gates.forEach(g => console.log(`gate ${g.id}: waits for ${g.waitsFor.join(" ")}; blocks ${g.blocks.join(" ") || "nothing"}`));
 console.log(startable.length ? "startable now:" : "startable now: none");
 startable.forEach(t => console.log(`  ${t.id} (${t.model}${t.gate ? ", needs owner for outward step" : ""}) ${t.name}`));
+console.log(scope.length ? `scope trace: ${scope.length} problem(s) to put to the owner` : `scope trace: ${asks.length} asks, all traced`);
+scope.forEach(s => console.log(`  ${s}`));

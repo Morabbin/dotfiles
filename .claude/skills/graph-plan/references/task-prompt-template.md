@@ -26,12 +26,14 @@ Concurrency note: <tasks in this wave that touch the same files, and the additiv
 - Depends on: <ids and PR numbers>
 - Unlocks: <ids, or "nothing directly">
 - Gate: <only if the outward step needs the owner>
+- Asks: <A-ids this task serves>
 
 Prompt:
 
 > Task <id> of the <project> plan (<plan link>; read <section> first). Repo <owner/repo>, start from current `main`. <If it finishes an earlier task: "It finishes what <id> (PR #n) left open; read that PR first.">
 >
 > Goal: <one sentence on the result and why it matters>.
+> Owner's ask: "<the ask, verbatim>" (<source>). This task delivers <all of it | the part named below; the rest is <task id> | the owner-approved narrowing <source>>.
 > 1. <scope item, naming real files>
 > 2. <scope item>
 > 3. <scope item>
@@ -39,11 +41,14 @@ Prompt:
 >
 > Done when: <the check command passes>, <a checkable condition>, <what the PR shows>.
 >
+> If you cannot deliver all of this scope, do not ship a smaller version as done or record the gap as acceptable: list what is missing under "Scope not delivered" in the PR and tell the coordinator.
+>
 > Standing rules: <every standing rule, in full>. Run `<check command>` locally and paste its output in the PR. Keep shared-file edits additive. Before merging, rebase on main and rerun the check; if your PR is the last of a merge batch, rebuild main and report. <Confidentiality rule, if the task can find third-party defects.> Open a PR, but ask <owner> before merging.
 ```
 
 ## Checklist before sending
 
+- The scope and done criteria cover the whole ask the task serves (or an owner-approved narrowing, cited), with no optional wording ("or record why not", "where feasible") the owner didn't approve.
 - The file names in the prompt exist on current main.
 - Every dependency is merged, not just open.
 - The standing rules are complete and current (copy them from the latest wave, then add any new owner decisions).
