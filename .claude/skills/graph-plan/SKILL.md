@@ -29,7 +29,7 @@ Details, including the hand-offs between roles: `references/roles.md`.
 3. **M0 first: one check command.** Before parallel work starts, a foundation task gives the repo one command that runs every check a PR needs (build, tests, lint, proof or type audits), runnable locally or in a cloud session. Every task prompt then says "run it and paste the output in the PR". This replaces CI when CI is unavailable or unreliable, and it makes "done" checkable.
 4. **Waves.** The planner writes a wave file with one self-contained prompt per startable task (`references/task-prompt-template.md`), and the coordinator starts one thread per prompt on the task's model. Startable means every dependency is merged, not just opened.
 5. **Merges.** Each task thread opens a PR and asks the owner before merging. When the owner approves a batch, merge it in dependency order, then **rebuild main with the check command before the next batch merges** (see the rules). The coordinator reports merges to the planner, which marks tasks done, updates the graph, and hands over the prompts that just became startable. Follow-ups found during a task become new tasks in the graph, not scope creep in the PR.
-6. **Review gates.** Gate R*k* sits between milestone M*k* and M*k*+1. It waits for M*k*'s tasks and blocks M*k*+1's unstarted tasks. It runs an adversarial review of the whole project, an advisor pass that settles every finding as confirmed, disputed or dropped, and a plan update by the planner. Every gate always runs the asks-vs-delivered lens; scope findings (an owner ask narrowed, weakened, dropped or unscheduled) and disputed findings go to the owner. Full design and the reviewer prompt: `references/review-gate.md`. A Workflow script that runs the review and advisor pass in one go: `.claude/workflows/milestone-review.js` (see "Running a gate as a workflow" below).
+6. **Review gates.** Gate R*k* sits between milestone M*k* and M*k*+1. It waits for M*k*'s tasks and blocks M*k*+1's unstarted tasks. It runs an adversarial review of the whole project, an advisor pass that settles every finding as confirmed, disputed or dropped, and a plan update by the planner. Every gate always runs the asks-vs-delivered lens; scope findings (an owner ask narrowed, weakened, dropped or unscheduled) and disputed findings go to the owner. Reviewers, skeptics and advisors never use a model that wrote the work (task models, the planner, advisors consulted while writing); if none is left, the gate cannot run and goes to the owner. Full design and the reviewer prompt: `references/review-gate.md`. A Workflow script that runs the review and advisor pass in one go: `.claude/workflows/milestone-review.js` (see "Running a gate as a workflow" below).
 7. **Repeat** 4 to 6 until the last milestone. The closing write-up is the last review unless the owner adds a gate.
 
 ## Files the method keeps
@@ -72,6 +72,7 @@ Workflow({ name: "milestone-review", args: {
   checkCommand: "tools/check-all.sh",
   ownerMessages: "the project chat",
   carryOver: ["T1.10"], confidentialFile: "/mnt/project-files/plan/divergences.md",
+  authorModels: ["<every task model>", "<planner model>"], reviewerModels: ["<candidate reviewers>"],
   extraLenses: [] } })
 ```
 

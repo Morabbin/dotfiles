@@ -29,6 +29,8 @@ theorems about an executable implementation).
 Work through them in that order for a review; wire 2-4 and the mechanical half of 1 into CI. Details and commands
 are in the references; the outline is below.
 
+The model or models that wrote or revised the proofs or statements, including sub-agents and advisors consulted while writing, must not review them. Use a non-author model, preferably from a different family; if none is available, say the review could not be done independently.
+
 ## 1. Statement vs intent (the reviewer's job)
 
 Read `references/statement-review.md` and apply it to every theorem the work relies on. The short form:

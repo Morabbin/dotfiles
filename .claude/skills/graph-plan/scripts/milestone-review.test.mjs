@@ -7,7 +7,7 @@ const body = readFileSync(new URL('./milestone-review.js', import.meta.url), 'ut
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor
 const workflow = new AsyncFunction('args', 'agent', 'pipeline', 'parallel', 'log', 'phase', body)
 
-const ARGS = { gate: 'R1', milestone: 'M1', repo: 'o/r', planDir: '/plan', checkCommand: 'check' }
+const ARGS = { gate: 'R1', milestone: 'M1', repo: 'o/r', planDir: '/plan', checkCommand: 'check', authorModels: ['model-a'], reviewerModels: ['model-a', 'model-b', 'model-c'] }
 const SCOPE = { title: 'Ask A1 narrowed', severity: 'high', detail: 'd', evidence: 'e', suggestedPlanChange: 's', confidential: false, ownerAsk: '"all targets" (chat 1)' }
 const NONE = { basis: 'none', evidence: '', ownerQuote: '', source: '' }
 const ROW = { ask: 'all targets', source: 'chat 1', tasks: 'T1', delivered: 'one', coverage: 'narrowed', ownerDecision: '', evidence: 'e', confidential: false }
@@ -15,7 +15,9 @@ const ROW = { ask: 'all targets', source: 'chat 1', tasks: 'T1', delivered: 'one
 // refutation: what every skeptic and advisor answers for the scope finding.
 async function run({ args = ARGS, refutation, ownerMessagesRead = true }) {
   let reportInput = null
-  const agent = async (prompt, { label }) => {
+  const models = []
+  const agent = async (prompt, { label, model }) => {
+    models.push([label, model])
     if (label === 'review:asks') return { findings: [SCOPE], trace: [ROW], sources: { ledgerRead: true, ownerMessagesRead, note: '' } }
     if (label.startsWith('review:')) return { findings: [] }
     if (label.startsWith('refute:')) return { refuted: refutation !== NONE, reason: 'r', scopeRefutation: refutation }
@@ -26,7 +28,7 @@ async function run({ args = ARGS, refutation, ownerMessagesRead = true }) {
   const pipeline = (items, a, b) => Promise.all(items.map(async it => b(await a(it), it)))
   const parallel = fns => Promise.all(fns.map(f => f()))
   const out = await workflow(args, agent, pipeline, parallel, () => {}, () => {})
-  return { out, reportInput }
+  return { out, reportInput, models }
 }
 
 const withMessages = { ...ARGS, ownerMessages: 'project chat' }
@@ -68,4 +70,20 @@ test('coverage is complete when every source was read', async () => {
   assert.equal(out.coverage.ownerMessages, 'read')
   assert.equal(out.coverage.complete, true)
   assert.equal(out.confirmed.length, 1)
+})
+
+test('no reviewer, skeptic or advisor uses an author model', async () => {
+  const { models } = await run({ args: { ...withMessages, authorModels: ['Provider/Model-A '] }, refutation: NONE })
+  const gate = models.filter(([l]) => l !== 'report')
+  assert.ok(gate.length > 0)
+  assert.ok(gate.every(([, m]) => m === 'model-b' || m === 'model-c'))
+  assert.notEqual(new Set(models.filter(([l]) => l.startsWith('advisor-')).map(([, m]) => m)).size, 1)
+})
+
+test('the gate refuses to run when every model is an author', async () => {
+  await assert.rejects(run({ args: { ...withMessages, authorModels: ['model-a', 'model-b', 'model-c'] }, refutation: NONE }), /no non-author model/)
+})
+
+test('empty authorModels is rejected', async () => {
+  await assert.rejects(run({ args: { ...withMessages, authorModels: [] }, refutation: NONE }), /authorModels must be a non-empty array/)
 })
