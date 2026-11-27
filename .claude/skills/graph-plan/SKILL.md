@@ -70,9 +70,12 @@ Workflow({ name: "milestone-review", args: {
   gate: "R1", milestone: "M1 Lean SDK surface",
   repo: "owner/repo", planDir: "/mnt/project-files/plan/",
   checkCommand: "tools/check-all.sh",
+  ownerMessages: "the project chat",
   carryOver: ["T1.10"], confidentialFile: "/mnt/project-files/plan/divergences.md",
   extraLenses: [] } })
 ```
+
+Pass `ownerMessages` (where the owner's own messages can be read): without it the asks lens cannot find asks missing from the ledger, and the gate reports itself incomplete.
 
 It returns the report as markdown plus structured findings. The caller writes it to `reviews/R<k>.md` and sends it to the planner. The workflow never edits the plan; the plan update is step 4 of the gate, done by the planner with the owner deciding disputed items. Without the opt-in, run the gate as a single reviewer thread with the prompt in `references/review-gate.md`.
 
