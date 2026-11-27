@@ -15,16 +15,18 @@ Gate R*k* sits between milestone M*k* and M*k*+1.
 
 Gates put the review on the critical path. Show that in the graph and tell the owner what it costs when gates are added.
 
+**Author exclusion.** No reviewer, lens reviewer, skeptic, advisor or approver may be a model that wrote or revised the work under review. Authors are the models of the tasks under review, the planner's model, any sub-agents that generated parts, and any advisors consulted while it was written. Record them in the report. If a default collides with an author, substitute another strong model, preferably from a different family. If no non-author model is available (for example every available model authored a task), the gate reports that it cannot run an adversarial review and escalates to the owner; it never falls back to an author model.
+
 **When a gate starts:** after the PRs it waits for have merged and main has been rebuilt with the check command. Reviewing a main that doesn't build wastes the reviewer.
 
 ## Flow
 
-1. **Review.** A reviewer (largest model) gets the prompt below. Read-only: no pushes, PRs or plan edits. It assumes the work is worse than it claims and looks for what is wrong, weak or missing.
-2. **Advisor pass.** Two persistent, read-only advisors, ideally from different model families (the `pr-advisors` pattern; fall back to two strong agents and say which ran), each get the full findings and the same prompt: try to refute every finding. The reviewer cross-shares their objections until they agree or the disagreement is stated, and settles each finding:
+1. **Review.** A reviewer (the largest non-author model) gets the prompt below. Read-only: no pushes, PRs or plan edits. It assumes the work is worse than it claims and looks for what is wrong, weak or missing.
+2. **Advisor pass.** Two persistent, read-only advisors, ideally from different model families (the `pr-advisors` pattern; fall back to two strong agents and say which ran), both non-authors, each get the full findings and the same prompt: try to refute every finding. The reviewer cross-shares their objections until they agree or the disagreement is stated, and settles each finding:
    - **confirmed:** survives both advisors, with evidence (file:line, command output, audit line);
    - **disputed:** advisors disagree; kept with both positions;
    - **dropped:** refuted; kept with the reason, so later gates don't re-raise it.
-3. **Report.** `reviews/R<k>.md` in the shared folder, sections: Summary (five lines max); Findings (id, severity high/medium/low, verdict, evidence, suggested plan change); Dropped findings (with reasons); Advisor record (models, disagreements). The reviewer sends the coordinator a summary of at most ten lines with the confirmed high and medium findings. Confidential findings go only to the confidential file.
+3. **Report.** `reviews/R<k>.md` in the shared folder, sections: Summary (five lines max); Findings (id, severity high/medium/low, verdict, evidence, suggested plan change); Dropped findings (with reasons); Advisor record (models, disagreements); Authors excluded (models). The reviewer sends the coordinator a summary of at most ten lines with the confirmed high and medium findings. Confidential findings go only to the confidential file.
 4. **Plan update (planner).** For each confirmed finding the planner does one of: add a task (model, deps, prompt), fold it into an existing task's prompt, change deps, or record why no change is needed. Disputed findings and any change to the owner's goals or scope go to the owner as a decision, never applied silently. The planner updates the plan doc, graph and tracker, and appends "Plan changes" to `R<k>.md`.
 5. **Gate opens** when the plan changes are recorded. The coordinator starts the blocked tasks; any new task the review added as a prerequisite also blocks them.
 
@@ -50,7 +52,7 @@ One project specialized lens 1 to Lean theorems and the axiom/`sorry` audit, len
 >
 > Goal: find what is wrong, weak or missing, assuming the work is not as good as it claims. Check at least: <lenses, numbered, specialized to this project>. Carried over from the previous gate: <carve-outs>.
 >
-> Then run the advisor pass: two read-only advisors (<models>) each try to refute every finding; cross-share their objections; settle each finding as confirmed, disputed or dropped, with evidence.
+> Then run the advisor pass: two read-only advisors (<models>; none of <author models>) each try to refute every finding; cross-share their objections; settle each finding as confirmed, disputed or dropped, with evidence.
 >
 > Output: <path>/reviews/R<k>.md with Summary, Findings, Dropped findings and Advisor record sections. Send the coordinator a summary of at most 10 lines with the confirmed high and medium findings. Confidential findings go only into <confidential file>, never into the report.
 >
@@ -58,4 +60,4 @@ One project specialized lens 1 to Lean theorems and the axiom/`sorry` audit, len
 
 ## As a workflow
 
-`.claude/workflows/milestone-review.js` runs steps 1 to 3 as one Workflow (lenses in parallel, three skeptics per finding, two advisors on survivors, a written report), when the owner has opted into multi-agent workflows. Its output is the report; step 4 stays with the planner and the owner.
+`.claude/workflows/milestone-review.js` runs steps 1 to 3 as one Workflow (lenses in parallel, three skeptics per finding, two advisors on survivors, a written report), when the owner has opted into multi-agent workflows. It requires `authorModels` and `reviewerModels` and refuses to run if no non-author model remains. Its output is the report; step 4 stays with the planner and the owner.
