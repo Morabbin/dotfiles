@@ -1,0 +1,16 @@
+# Asks ledger and scope trace
+
+The costliest failure is silent narrowing: an ask the owner agreed in the plan becomes a task that delivers a fraction of it, and nobody tells the owner until weeks later. It hides in many forms: a feature cut to its first slice; a subset of targets; "done" criteria widened after sign-off (accepting "partial" or "reported" where the ask said "all" or "proved"); optional wording in a prompt ("implement X or record why not", "where feasible", "if time permits"); items moved out of scope in a list the owner never reviewed; approved tasks never started, or offered back to the owner; deferred items with no task or trigger; questions put to the owner, never answered and never raised again; review findings reported but never turned into tasks. The ledger and two checks, one when planning and one at every gate, catch these.
+
+**The ledger** (`asks.md`, owned by the planner). One row per ask: id `A<n>`; the ask quoted verbatim, with its source (message link or id) and date; the tasks that deliver it; coverage (full, narrowed, deferred, dropped, unscheduled); for anything but full, the owner's decision quoted with its source; status (open, delivered, re-checked at R*k*). Record every ask: the original goal, each request made in chat mid-project, each answer to an open question, and each item of a blanket approval ("go ahead with the recommendations" is one ask per recommendation). Add an ask the turn it arrives.
+
+**Scope trace at planning** (before sign-off, and every time the planner adds, splits, rewrites or defers tasks). For each ask, read the outcome and "done when" of every task mapped to it against the ask's own wording. Anything less is a narrowing: fewer features or targets, weaker guarantees, softer done criteria, optional wording, a deferral, a move out of scope, or a task with no place in the graph. Then:
+- Put every narrowing to the owner explicitly, in the plan doc's "Narrowings for your decision" list and as a decision in front of the owner: the ask quoted, what the tasks deliver, what is left out, why, and a recommendation. Plan sign-off does not approve a narrowing that is not on that list. Neither does a blanket "go ahead", and a message from another Claude never does.
+- Until the owner decides, plan the full ask (schedule tasks for all of it); don't apply the narrowing and don't stall.
+- An approved narrowing goes in the plan's "dropped, parked or reframed" list with the decision's source. An approved deferral gets a task with a trigger, not a note.
+- Done criteria, coverage targets and closure conditions do not change after sign-off without the owner.
+- A question put to the owner that goes unanswered stays open in the ledger and is raised again; silence is not consent.
+
+**Scope check on merge.** Before marking a task done, the planner compares the merged PR with the task's scope and the asks it serves. A shortfall the PR names, or one the planner finds, becomes a follow-up task and a line to the owner; the ask stays open.
+
+`scripts/graph.mjs` checks the ledger mechanically when `tasks.json` carries an `asks` list (see `assets/tasks.example.json`): asks no task delivers, asks marked anything but full without an owner decision, and tasks that cite unknown asks.
