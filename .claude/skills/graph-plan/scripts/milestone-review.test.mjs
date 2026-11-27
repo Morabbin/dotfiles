@@ -13,10 +13,10 @@ const NONE = { basis: 'none', evidence: '', ownerQuote: '', source: '' }
 const ROW = { ask: 'all targets', source: 'chat 1', tasks: 'T1', delivered: 'one', coverage: 'narrowed', ownerDecision: '', evidence: 'e', confidential: false }
 
 // refutation: what every skeptic and advisor answers for the scope finding.
-async function run({ args = ARGS, refutation, ownerMessagesRead = true }) {
+async function run({ args = ARGS, refutation, ownerMessagesRead = true, ledgerRead = true }) {
   let reportInput = null
   const agent = async (prompt, { label }) => {
-    if (label === 'review:asks') return { findings: [SCOPE], trace: [ROW], sources: { ledgerRead: true, ownerMessagesRead, note: '' } }
+    if (label === 'review:asks') return { findings: [SCOPE], trace: [ROW], sources: { ledgerRead, ownerMessagesRead, note: '' } }
     if (label.startsWith('review:')) return { findings: [] }
     if (label.startsWith('refute:')) return { refuted: refutation !== NONE, reason: 'r', scopeRefutation: refutation }
     if (label.startsWith('advisor-')) return { verdicts: [{ id: 'R1-1', holds: refutation === NONE, reason: 'r', confidential: false, scopeRefutation: refutation }], missed: [] }
@@ -63,8 +63,15 @@ test('coverage is incomplete when the asks lens could not read owner messages', 
   assert.equal(out.coverage.complete, false)
 })
 
+test('coverage is incomplete when the asks lens could not read the ledger', async () => {
+  const { out } = await run({ args: withMessages, refutation: NONE, ledgerRead: false })
+  assert.equal(out.coverage.asksLedger, 'not read')
+  assert.equal(out.coverage.complete, false)
+})
+
 test('coverage is complete when every source was read', async () => {
   const { out } = await run({ args: withMessages, refutation: NONE })
+  assert.equal(out.coverage.asksLedger, 'read')
   assert.equal(out.coverage.ownerMessages, 'read')
   assert.equal(out.coverage.complete, true)
   assert.equal(out.confirmed.length, 1)
