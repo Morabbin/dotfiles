@@ -17,6 +17,9 @@ const A = args || {}
 const need = ['gate', 'milestone', 'repo', 'planDir', 'checkCommand', 'authorModels', 'reviewerModels']
 const missing = need.filter(k => !A[k])
 if (missing.length) throw new Error(`milestone-review: missing args ${missing.join(', ')}`)
+for (const k of ['authorModels', 'reviewerModels']) {
+  if (!Array.isArray(A[k]) || !A[k].length) throw new Error(`milestone-review: ${k} must be a non-empty array of model names`)
+}
 
 // No reviewer, skeptic or advisor may be a model that wrote the work. With no non-author model left, the gate cannot run.
 const isAuthor = m => A.authorModels.includes(m)
@@ -115,7 +118,10 @@ log(`${all.length} findings, ${unique.length} unique, ${survivors.length} surviv
 // Advise: two independent advisors see the same full list (barrier: they judge findings against each other).
 phase('Advise')
 const list = survivors.map(f => `${f.id}: ${show(f)}`).join('\n\n')
-const models = (A.advisorModels || [pick(0), pick(1)]).map((m, i) => isAuthor(m) ? pick(i) : m)
+const distinct = [...new Set([...(A.advisorModels || []).filter(m => !isAuthor(m)), ...pool])]
+const models = [0, 1].map(i => distinct[i % distinct.length])
+const sameAdvisor = models[0] === models[1]
+if (sameAdvisor) log(`only one non-author model available (${models[0]}); both advisors run on it`)
 const advice = survivors.length ? (await parallel(models.map((m, i) => () =>
   agent(`${CONTEXT}\n\nYou are advisor ${i + 1} of 2 at this review gate. For EVERY finding below, check the repo and decide whether it holds (a real problem the plan should act on). Try to refute each one; prefer the smallest plan change that fixes a real problem. You may adjust severity. Set confidential=true on a verdict whose reason reveals a defect in someone else's software. In "missed", list anything important the review missed as findings with evidence, each with its own confidential flag.\n\n${list}`,
     { label: `advisor-${i + 1}`, phase: 'Advise', schema: ADVICE, model: m })))).filter(Boolean) : []
@@ -138,7 +144,7 @@ const additions = advice.flatMap((a, i) => (a.missed || []).map(f => ({ ...f, fr
 confidential.push(...additions.filter(f => f.confidential))
 const missed = additions.filter(f => !f.confidential)
 const coverage = { missingLenses, advisorsReturned: advice.length, complete: !missingLenses.length && (!survivors.length || advice.length === 2) }
-const markdown = await agent(`Write the review gate report for ${A.gate} (end of ${A.milestone}) as markdown, from the JSON below. Sections exactly: "# ${A.gate} review", "## Summary" (five lines max), "## Findings" (a table: id, severity, verdict, title, evidence, suggested plan change; confirmed first, then disputed with both advisors' positions under the table), "## Dropped findings" (title and the reason it was refuted), "## Advisor record" (advisor models: ${models.join(', ')}; author models excluded from the gate: ${A.authorModels.join(', ')}; where they disagreed; what they said the review missed, marked unverified), a "## Coverage" section that states plainly whether the review is complete and names any lens or advisor that returned nothing (an incomplete gate must not read as a clean one), and an empty "## Plan changes" section for the planner to fill. Do not invent findings. Return only the markdown.\n\n${JSON.stringify({ findings: pub.filter(f => f.verdict !== 'dropped'), dropped: droppedPub, missed, coverage }, null, 1)}`,
+const markdown = await agent(`Write the review gate report for ${A.gate} (end of ${A.milestone}) as markdown, from the JSON below. Sections exactly: "# ${A.gate} review", "## Summary" (five lines max), "## Findings" (a table: id, severity, verdict, title, evidence, suggested plan change; confirmed first, then disputed with both advisors' positions under the table), "## Dropped findings" (title and the reason it was refuted), "## Advisor record" (advisor models: ${models.join(', ')}; ${sameAdvisor ? 'both advisors ran on the same model because only one non-author model was available; ' : ''}author models excluded from the gate: ${A.authorModels.join(', ')}; where they disagreed; what they said the review missed, marked unverified), a "## Coverage" section that states plainly whether the review is complete and names any lens or advisor that returned nothing (an incomplete gate must not read as a clean one), and an empty "## Plan changes" section for the planner to fill. Do not invent findings. Return only the markdown.\n\n${JSON.stringify({ findings: pub.filter(f => f.verdict !== 'dropped'), dropped: droppedPub, missed, coverage }, null, 1)}`,
   { label: 'report', phase: 'Report' })
 
 return {
