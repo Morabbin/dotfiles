@@ -24,12 +24,12 @@ Details, including the hand-offs between roles: `references/roles.md`.
 
 ## Lifecycle
 
-1. **Plan.** Write the plan doc: goal, scope and non-goals, architecture, milestones M0..Mn, and a task list where every task has an id (`T<milestone>.<n>`), a one-line outcome, dependencies, a model, and a gate flag if its outward step is irreversible. Format and model-choice guidance: `references/plan-doc.md`. Get the owner's sign-off before anything runs.
+1. **Plan.** Write the plan doc: goal, scope and non-goals, architecture, milestones M0..Mn, and a task list where every task has an id (`T<milestone>.<n>`), a one-line outcome, dependencies, a model, and a gate flag if its outward step is irreversible. Format and model-choice guidance: `references/plan-doc.md`. Build the asks ledger and run the scope trace (`references/asks-ledger.md`): every owner ask maps to tasks that deliver all of it, and every narrowing goes to the owner as an explicit decision. Then get the owner's sign-off before anything runs.
 2. **Graph.** Put the tasks in a machine-readable list (`assets/tasks.example.json` shows the shape). `node scripts/graph.mjs tasks.json` checks for cycles, unknown deps and done-before-deps, and lists waves, the critical path, each gate's waits-for and blocks, and the tasks startable now. `node scripts/graph.mjs tasks.json --render graph.html` builds an interactive graph page (waves as columns, colour per model, gated tasks outlined) from `assets/task-graph-template.html`; publish it as an Artifact and republish to the same URL as statuses change. Add the review gates now (step 6), so the graph shows their cost.
 3. **M0 first: one check command.** Before parallel work starts, a foundation task gives the repo one command that runs every check a PR needs (build, tests, lint, proof or type audits), runnable locally or in a cloud session. Every task prompt then says "run it and paste the output in the PR". This replaces CI when CI is unavailable or unreliable, and it makes "done" checkable.
 4. **Waves.** The planner writes a wave file with one self-contained prompt per startable task (`references/task-prompt-template.md`), and the coordinator starts one thread per prompt on the task's model. Startable means every dependency is merged, not just opened.
 5. **Merges.** Each task thread opens a PR and asks the owner before merging. When the owner approves a batch, merge it in dependency order, then **rebuild main with the check command before the next batch merges** (see the rules). The coordinator reports merges to the planner, which marks tasks done, updates the graph, and hands over the prompts that just became startable. Follow-ups found during a task become new tasks in the graph, not scope creep in the PR.
-6. **Review gates.** Gate R*k* sits between milestone M*k* and M*k*+1. It waits for M*k*'s tasks and blocks M*k*+1's unstarted tasks. It runs an adversarial review of the whole project, an advisor pass that settles every finding as confirmed, disputed or dropped, and a plan update by the planner. Disputed findings and scope changes go to the owner. Full design and the reviewer prompt: `references/review-gate.md`. A Workflow script that runs the review and advisor pass in one go: `.claude/workflows/milestone-review.js` (see "Running a gate as a workflow" below).
+6. **Review gates.** Gate R*k* sits between milestone M*k* and M*k*+1. It waits for M*k*'s tasks and blocks M*k*+1's unstarted tasks. It runs an adversarial review of the whole project, an advisor pass that settles every finding as confirmed, disputed or dropped, and a plan update by the planner. Every gate always runs the asks-vs-delivered lens; scope findings (an owner ask narrowed, weakened, dropped or unscheduled) and disputed findings go to the owner. Full design and the reviewer prompt: `references/review-gate.md`. A Workflow script that runs the review and advisor pass in one go: `.claude/workflows/milestone-review.js` (see "Running a gate as a workflow" below).
 7. **Repeat** 4 to 6 until the last milestone. The closing write-up is the last review unless the owner adds a gate.
 
 ## Files the method keeps
@@ -38,6 +38,7 @@ Keep them in a shared folder every thread can read (in a Claude project, the pro
 
 - `plan` doc: the signed-off plan; the planner edits it when gates or follow-ups change it.
 - `tasks.json` (or the data block inside the graph page) and the published graph page.
+- `asks.md`: the asks ledger, every owner ask quoted with its source and traced to tasks (`references/asks-ledger.md`).
 - `tracker.md`: task, thread id, status, PR. One row per task. The coordinator and planner both update it.
 - `wave-N-threads.md` / `pending-next.md`: prompts ready to send, each with "starts when", model, and what it unlocks.
 - `reviews/R<k>.md`: each gate's report and the plan changes it caused.
@@ -57,6 +58,7 @@ These are the parts worth copying even if you change everything else.
 - **Self-contained prompts.** Each prompt carries the task id, the plan link, the repo and branch base, the goal, a numbered scope, a "done when" with checkable conditions, and the standing rules repeated in full. Threads don't share context; a rule that isn't in the prompt doesn't exist for that thread.
 - **Check main for real names before sending a prompt.** Prompts are written ahead of time; files get renamed. The coordinator or planner re-reads main before sending.
 - **Statuses lie unless someone owns them.** Only the planner edits the graph. The coordinator reports; it doesn't redraw.
+- **Asks narrow silently between the owner and the task.** A feature agreed in the plan was cut to its first slice when it became a task, and the owner found out a month later. Narrowing also came as softened done criteria, "implement or record" escape hatches, unreviewed out-of-scope lists and approved tasks that never started. Trace every ask to tasks, put every narrowing to the owner by name, and re-check the asks at every gate (`references/asks-ledger.md`).
 - **Gates cost parallelism.** A gate puts the review on the critical path. Carve long, off-path tasks out of a gate (the next gate reviews them) rather than holding a milestone for them, and say in the graph which tasks each gate waits for.
 
 ## Running a gate as a workflow
@@ -68,9 +70,12 @@ Workflow({ name: "milestone-review", args: {
   gate: "R1", milestone: "M1 Lean SDK surface",
   repo: "owner/repo", planDir: "/mnt/project-files/plan/",
   checkCommand: "tools/check-all.sh",
+  ownerMessages: "the project chat",
   carryOver: ["T1.10"], confidentialFile: "/mnt/project-files/plan/divergences.md",
   extraLenses: [] } })
 ```
+
+Pass `ownerMessages` (where the owner's own messages can be read): without it the asks lens cannot find asks missing from the ledger, and the gate reports itself incomplete.
 
 It returns the report as markdown plus structured findings. The caller writes it to `reviews/R<k>.md` and sends it to the planner. The workflow never edits the plan; the plan update is step 4 of the gate, done by the planner with the owner deciding disputed items. Without the opt-in, run the gate as a single reviewer thread with the prompt in `references/review-gate.md`.
 

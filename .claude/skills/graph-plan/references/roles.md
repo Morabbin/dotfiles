@@ -22,16 +22,18 @@ Talks to the owner and starts work. Per event:
 | Owner says merge | relays to the task threads with the owner's message attached; after the batch, makes sure main was rebuilt with the check command |
 | PRs merged | tells the planner which PRs merged (numbers, merge commits) and anything the threads flagged for the plan |
 | Planner sends prompts | checks main for renamed files, then starts the threads |
-| Gate report arrives | forwards the summary to the planner; puts disputed findings in front of the owner as decisions |
+| Gate report arrives | forwards the summary to the planner; puts disputed findings and every scope finding in front of the owner as decisions |
 
 The coordinator never edits the plan, the graph or a task's scope. When it learns something the plan needs (a follow-up, a broken main, a lesson), it tells the planner.
 
 ## Planner
 
-One long-lived thread that owns the plan doc, the graph, the tracker and the prompts.
+One long-lived thread that owns the plan doc, the graph, the tracker, the asks ledger and the prompts.
+
+- Asks: record every owner ask in the ledger the turn it arrives and trace it to tasks (`asks-ledger.md`). Never narrow, defer or drop an ask without the owner's explicit decision; put each narrowing to the owner by name. Approved tasks are scheduled, not offered back to the owner.
 
 - Before each wave: write the prompts for every task that will become startable when the current PRs merge, so the coordinator never waits on writing. Use `task-prompt-template.md`.
-- On merges: mark tasks done, update the graph's status lists, republish the graph, and send the coordinator the prompts that just became startable.
+- On merges: check each PR against its task's whole scope and the asks it serves; a shortfall becomes a follow-up task and a line to the owner. Then mark tasks done, update the graph's status lists, republish the graph, and send the coordinator the prompts that just became startable.
 - On follow-ups: add a task (id, model, deps, prompt) instead of widening a running task. Name the follow-up after the task it finishes ("T1.4 follow-ups: …").
 - On gates: write the reviewer prompt from `review-gate.md`, then apply the outcome (step 4 of the gate) and record the plan changes in the gate's report.
 - Keep the tracker consistent with the graph. One person editing statuses is what keeps them true.
@@ -40,6 +42,7 @@ One long-lived thread that owns the plan doc, the graph, the tracker and the pro
 
 - Starts from current main on its own branch.
 - Does the scope in the prompt and nothing else. Anything extra goes into the PR description as a suggested follow-up.
+- If it cannot deliver the whole scope, lists what is missing under "Scope not delivered" in the PR and tells the coordinator, instead of shipping a smaller version as done.
 - Runs the check command and pastes the output into the PR.
 - Opens the PR, assigns the owner, and asks before merging.
 - On merge approval: rebase on main, rerun the check command, merge. If it is the last PR of a batch, rebuild main and report the result.

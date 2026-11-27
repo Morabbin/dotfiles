@@ -5,14 +5,16 @@ The plan doc is a readable document the owner signs off (in a Claude project, a 
 ## Sections
 
 1. **Summary.** The goal in two or three sentences, and what "done" means for the whole project.
-2. **Scope.** In scope, non-goals, and a "dropped, parked or reframed" list for anything the owner cut, with the reason. Threads read this to avoid reviving cut work.
-3. **Current state.** What exists, with numbers you can check later (tests, theorems, modules).
-4. **Proposed architecture.** The layers or components, enough for task prompts to point at a section instead of repeating it.
-5. **Milestones.** M0 to Mn, each with a one-line outcome. M0 is always foundation: toolchain, the single check command, README, cleanup.
-6. **Tasks.** A table per milestone (below).
-7. **Review gates.** Which gate sits after which milestone, what it waits for, what it blocks, and its carve-outs.
-8. **Open questions for the owner.** Numbered, each with a recommendation. Resolve them before sign-off and record the answers here.
-9. **Standing rules.** The rules every prompt repeats.
+2. **Asks.** Every owner ask, quoted with its source, and the tasks that deliver it (from the asks ledger, `asks-ledger.md`).
+3. **Narrowings for your decision.** Each ask the tasks deliver less of: what is left out, why, and a recommendation. Empty is a valid answer; a missing section is not. Sign-off does not approve a narrowing that is not listed here.
+4. **Scope.** In scope, non-goals, and a "dropped, parked or reframed" list for anything the owner cut, with the reason and the owner's decision. Threads read this to avoid reviving cut work.
+5. **Current state.** What exists, with numbers you can check later (tests, theorems, modules).
+6. **Proposed architecture.** The layers or components, enough for task prompts to point at a section instead of repeating it.
+7. **Milestones.** M0 to Mn, each with a one-line outcome. M0 is always foundation: toolchain, the single check command, README, cleanup.
+8. **Tasks.** A table per milestone (below).
+9. **Review gates.** Which gate sits after which milestone, what it waits for, what it blocks, and its carve-outs.
+10. **Open questions for the owner.** Numbered, each with a recommendation. Resolve them before sign-off and record the answers here.
+11. **Standing rules.** The rules every prompt repeats.
 
 ## Task row
 
@@ -20,6 +22,7 @@ The plan doc is a readable document the owner signs off (in a Claude project, a 
 |---|---|
 | id | `T<milestone>.<n>`; follow-ups get the next free number in the same milestone |
 | outcome | one line, phrased as the result ("Verified JSON parser replacing the trusted one") |
+| asks | the owner asks (`A<n>`) this task serves |
 | deps | ids that must be **merged** first |
 | model | see below |
 | gate | true if the task's outward step is irreversible and needs the owner |
