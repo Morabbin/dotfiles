@@ -10,15 +10,27 @@ export const meta = {
 }
 
 // args: { gate, milestone, repo, planDir, checkCommand, carryOver?, confidentialFile?,
+//         authorModels: string[] (every model that wrote or revised the work under review, including the planner and advisors consulted),
+//         reviewerModels: string[] (candidate reviewers; author models are removed),
 //         asksFile?, ownerMessages?,
 //         extraLenses?: [{key, prompt}], advisorModels?: [string, string], standingRules? }
 // asksFile: the asks ledger (every owner ask, quoted with its source, traced to tasks); default <planDir>/asks.md.
 // ownerMessages: where the owner's own messages can be read (e.g. the project chat), so the asks lens
 // can find asks the ledger missed. Without it, or if the asks lens reports it could not read them or the ledger, the gate is incomplete.
 const A = args || {}
-const need = ['gate', 'milestone', 'repo', 'planDir', 'checkCommand']
+const need = ['gate', 'milestone', 'repo', 'planDir', 'checkCommand', 'authorModels', 'reviewerModels']
 const missing = need.filter(k => !A[k])
 if (missing.length) throw new Error(`milestone-review: missing args ${missing.join(', ')}`)
+for (const k of ['authorModels', 'reviewerModels']) {
+  if (!Array.isArray(A[k]) || !A[k].length) throw new Error(`milestone-review: ${k} must be a non-empty array of model names`)
+}
+
+// No reviewer, skeptic or advisor may be a model that wrote the work. With no non-author model left, the gate cannot run.
+const norm = m => String(m).trim().toLowerCase().replace(/^[^/]*\//, '')
+const isAuthor = m => A.authorModels.some(a => norm(a) === norm(m))
+const pool = A.reviewerModels.filter(m => !isAuthor(m))
+if (!pool.length) throw new Error(`milestone-review: no non-author model available; cannot run an adversarial review. Escalate to the owner. Authors: ${A.authorModels.join(', ')}`)
+const pick = i => pool[i % pool.length]
 
 const ASKS = A.asksFile || `${A.planDir}/asks.md`
 const CONTEXT = `Gate ${A.gate} of a graph plan, at the end of milestone ${A.milestone}. Repo ${A.repo}, current main (check it out read-only). Plan folder: ${A.planDir} (plan doc link, asks ledger ${ASKS}, tracker, pending prompts, earlier reviews/R*.md).${A.ownerMessages ? ` The owner's own messages: ${A.ownerMessages}.` : ''}${A.confidentialFile ? ` Confidential findings file: ${A.confidentialFile}.` : ''} Check command: \`${A.checkCommand}\`.${A.standingRules ? ` Standing rules: ${A.standingRules}` : ''}
@@ -137,11 +149,11 @@ let scopeRaw = null
 const reviewed = await pipeline(
   LENSES,
   lens => agent(`${CONTEXT}\n\nYour lens: ${lens.prompt}\n\nReturn every finding under this lens, most severe first. Return an empty list if you find nothing real.`,
-    { label: `review:${lens.key}`, phase: 'Review', schema: lens === SCOPE_LENS ? SCOPE_FINDINGS : FINDINGS }),
+    { label: `review:${lens.key}`, phase: 'Review', schema: lens === SCOPE_LENS ? SCOPE_FINDINGS : FINDINGS, model: pick(LENSES.indexOf(lens)) }),
   (res, lens) => { if (lens === SCOPE_LENS) scopeRaw = res; return res === null ? { missingLens: lens.key } : parallel(res.findings.map(f => async () => {
     const votes = (await parallel([0, 1, 2].map(i => () =>
       agent(`${CONTEXT}\n\nSkeptic ${i + 1} of 3. Try to REFUTE this finding by checking the repo yourself: is it wrong, already fixed, out of the plan's scope, or unsupported by its evidence? Answer refuted=true only with a concrete reason. ${isScope(f) ? SCOPE_REFUTE_RULE : NON_SCOPE_RULE}\n\n${show(f)}`,
-        { label: `refute:${lens.key}`, phase: 'Review', schema: REFUTE })))).filter(Boolean)
+        { label: `refute:${lens.key}`, phase: 'Review', schema: REFUTE, model: pick(LENSES.indexOf(lens) + 1 + (pool.length > 1 ? i % (pool.length - 1) : 0)) })))).filter(Boolean)
     const refutations = votes.filter(v => v.refuted && counts(f, v))
     const survives = refutations.length < 2
     return { ...f, lens: lens.key, skeptics: votes, survives,
@@ -170,10 +182,13 @@ log(`${all.length} findings, ${unique.length} unique, ${survivors.length} surviv
 // Advise: two independent advisors see the same full list (barrier: they judge findings against each other).
 phase('Advise')
 const list = survivors.map(f => `${f.id}: ${show(f)}`).join('\n\n')
-const models = A.advisorModels || [undefined, undefined]
+const distinct = [...new Set([...(A.advisorModels || []).filter(m => !isAuthor(m)), ...pool])]
+const models = [0, 1].map(i => distinct[i % distinct.length])
+const sameAdvisor = models[0] === models[1]
+if (sameAdvisor) log(`only one non-author model available (${models[0]}); both advisors run on it`)
 const advice = survivors.length ? (await parallel(models.map((m, i) => () =>
   agent(`${CONTEXT}\n\nYou are advisor ${i + 1} of 2 at this review gate. For EVERY finding below, check the repo and decide whether it holds (a real problem the plan should act on). Try to refute each one; prefer the smallest plan change that fixes a real problem. For a scope finding (one that names an owner's ask), holds=false counts only with a scopeRefutation. ${SCOPE_REFUTE_RULE} For other findings: ${NON_SCOPE_RULE} You may adjust severity. Set confidential=true on a verdict whose reason reveals a defect in someone else's software. In "missed", list anything important the review missed as findings with evidence, each with its own confidential flag.\n\n${list}`,
-    { label: `advisor-${i + 1}`, phase: 'Advise', schema: ADVICE, ...(m ? { model: m } : {}) })))).filter(Boolean) : []
+    { label: `advisor-${i + 1}`, phase: 'Advise', schema: ADVICE, model: m })))).filter(Boolean) : []
 if (survivors.length && advice.length < 2) log(`only ${advice.length} of 2 advisors returned; affected findings are marked disputed`)
 
 const settled = survivors.map(f => {
@@ -200,7 +215,7 @@ const tracePub = scopeTrace.filter(r => !r.confidential)
 confidential.push(...scopeTrace.filter(r => r.confidential).map(r => ({ title: `scope trace: ${r.ask}`, ...r })))
 const coverage = { missingLenses, scopeTraceRows: scopeTrace.length, asksLedger, ownerMessages, advisorsReturned: advice.length,
   complete: !missingLenses.length && scopeTrace.length > 0 && asksLedger === 'read' && ownerMessages === 'read' && (!survivors.length || advice.length === 2) }
-const markdown = await agent(`Write the review gate report for ${A.gate} (end of ${A.milestone}) as markdown, from the JSON below. Sections exactly: "# ${A.gate} review", "## Summary" (five lines max), "## Findings" (a table: id, severity, verdict, title, evidence, suggested plan change; confirmed first, then disputed with both advisors' positions under the table), "## Scope trace" (a table with one row per owner ask from scopeTrace: ask quoted, source, tasks, delivered, coverage, owner decision, evidence; say plainly if it is empty), "## Owner decisions needed" (every item in ownerDecisions: the owner's ask quoted, what was delivered, what is missing, the suggested plan change; these are never settled by the planner alone), "## Refuted scope findings" (every item in scopeRefuted: the ask, and each claimed basis with its evidence or the quoted owner decision and source; say these refutations are model claims, not independently verified, for the owner to check), "## Dropped findings" (title and the reason it was refuted), "## Advisor record" (advisor models: ${models.map(m => m || 'session default').join(', ')}; where they disagreed; what they said the review missed, marked unverified), a "## Coverage" section that states plainly whether the review is complete and names any lens or advisor that returned nothing, whether the asks ledger was read, and whether the owner's own messages were read (if not, say asks missing from the ledger were not checked) (an incomplete gate must not read as a clean one), and an empty "## Plan changes" section for the planner to fill. Do not invent findings. Return only the markdown.\n\n${JSON.stringify({ findings: pub.filter(f => f.verdict !== 'dropped'), dropped: droppedPub, missed, scopeTrace: tracePub, ownerDecisions, scopeRefuted, coverage }, null, 1)}`,
+const markdown = await agent(`Write the review gate report for ${A.gate} (end of ${A.milestone}) as markdown, from the JSON below. Sections exactly: "# ${A.gate} review", "## Summary" (five lines max), "## Findings" (a table: id, severity, verdict, title, evidence, suggested plan change; confirmed first, then disputed with both advisors' positions under the table), "## Scope trace" (a table with one row per owner ask from scopeTrace: ask quoted, source, tasks, delivered, coverage, owner decision, evidence; say plainly if it is empty), "## Owner decisions needed" (every item in ownerDecisions: the owner's ask quoted, what was delivered, what is missing, the suggested plan change; these are never settled by the planner alone), "## Refuted scope findings" (every item in scopeRefuted: the ask, and each claimed basis with its evidence or the quoted owner decision and source; say these refutations are model claims, not independently verified, for the owner to check), "## Dropped findings" (title and the reason it was refuted), "## Advisor record" (advisor models: ${models.join(', ')}; ${sameAdvisor ? 'both advisors ran on the same model because only one non-author model was available; ' : ''}author models excluded from the gate: ${A.authorModels.join(', ')}; where they disagreed; what they said the review missed, marked unverified), a "## Coverage" section that states plainly whether the review is complete and names any lens or advisor that returned nothing, whether the asks ledger was read, and whether the owner's own messages were read (if not, say asks missing from the ledger were not checked) (an incomplete gate must not read as a clean one), and an empty "## Plan changes" section for the planner to fill. Do not invent findings. Return only the markdown.\n\n${JSON.stringify({ findings: pub.filter(f => f.verdict !== 'dropped'), dropped: droppedPub, missed, scopeTrace: tracePub, ownerDecisions, scopeRefuted, coverage }, null, 1)}`,
   { label: 'report', phase: 'Report' })
 
 return {
