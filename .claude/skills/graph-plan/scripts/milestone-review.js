@@ -22,7 +22,8 @@ for (const k of ['authorModels', 'reviewerModels']) {
 }
 
 // No reviewer, skeptic or advisor may be a model that wrote the work. With no non-author model left, the gate cannot run.
-const isAuthor = m => A.authorModels.includes(m)
+const norm = m => String(m).trim().toLowerCase().replace(/^[^/]*\//, '')
+const isAuthor = m => A.authorModels.some(a => norm(a) === norm(m))
 const pool = A.reviewerModels.filter(m => !isAuthor(m))
 if (!pool.length) throw new Error(`milestone-review: no non-author model available; cannot run an adversarial review. Escalate to the owner. Authors: ${A.authorModels.join(', ')}`)
 const pick = i => pool[i % pool.length]
@@ -99,7 +100,7 @@ const reviewed = await pipeline(
   (res, lens) => res === null ? { missingLens: lens.key } : parallel(res.findings.map(f => async () => {
     const votes = (await parallel([0, 1, 2].map(i => () =>
       agent(`${CONTEXT}\n\nSkeptic ${i + 1} of 3. Try to REFUTE this finding by checking the repo yourself: is it wrong, already fixed, out of the plan's scope, or unsupported by its evidence? Answer refuted=true only with a concrete reason.\n\n${show(f)}`,
-        { label: `refute:${lens.key}`, phase: 'Review', schema: REFUTE, model: pick(LENSES.indexOf(lens) + i + 1) })))).filter(Boolean)
+        { label: `refute:${lens.key}`, phase: 'Review', schema: REFUTE, model: pick(LENSES.indexOf(lens) + 1 + (pool.length > 1 ? i % (pool.length - 1) : 0)) })))).filter(Boolean)
     const refutations = votes.filter(v => v.refuted)
     return { ...f, lens: lens.key, skeptics: votes, survives: refutations.length < 2 }
   })),

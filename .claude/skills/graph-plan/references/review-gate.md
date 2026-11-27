@@ -26,7 +26,7 @@ Gates put the review on the critical path. Show that in the graph and tell the o
    - **confirmed:** survives both advisors, with evidence (file:line, command output, audit line);
    - **disputed:** advisors disagree; kept with both positions;
    - **dropped:** refuted; kept with the reason, so later gates don't re-raise it.
-3. **Report.** `reviews/R<k>.md` in the shared folder, sections: Summary (five lines max); Findings (id, severity high/medium/low, verdict, evidence, suggested plan change); Dropped findings (with reasons); Advisor record (models, disagreements); Authors excluded (models). The reviewer sends the coordinator a summary of at most ten lines with the confirmed high and medium findings. Confidential findings go only to the confidential file.
+3. **Report.** `reviews/R<k>.md` in the shared folder, sections: Summary (five lines max); Findings (id, severity high/medium/low, verdict, evidence, suggested plan change); Dropped findings (with reasons); Advisor record (models, author models excluded, disagreements). The reviewer sends the coordinator a summary of at most ten lines with the confirmed high and medium findings. Confidential findings go only to the confidential file.
 4. **Plan update (planner).** For each confirmed finding the planner does one of: add a task (model, deps, prompt), fold it into an existing task's prompt, change deps, or record why no change is needed. Disputed findings and any change to the owner's goals or scope go to the owner as a decision, never applied silently. The planner updates the plan doc, graph and tracker, and appends "Plan changes" to `R<k>.md`.
 5. **Gate opens** when the plan changes are recorded. The coordinator starts the blocked tasks; any new task the review added as a prerequisite also blocks them.
 
@@ -54,7 +54,7 @@ One project specialized lens 1 to Lean theorems and the axiom/`sorry` audit, len
 >
 > Then run the advisor pass: two read-only advisors (<models>; none of <author models>) each try to refute every finding; cross-share their objections; settle each finding as confirmed, disputed or dropped, with evidence.
 >
-> Output: <path>/reviews/R<k>.md with Summary, Findings, Dropped findings and Advisor record sections. Send the coordinator a summary of at most 10 lines with the confirmed high and medium findings. Confidential findings go only into <confidential file>, never into the report.
+> Output: <path>/reviews/R<k>.md with Summary, Findings, Dropped findings and Advisor record (advisor models, author models excluded) sections. Send the coordinator a summary of at most 10 lines with the confirmed high and medium findings. Confidential findings go only into <confidential file>, never into the report.
 >
 > Standing rules: <standing rules>. Run `<check command>` locally. Read-only.
 
